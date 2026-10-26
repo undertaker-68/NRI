@@ -1,0 +1,324 @@
+<title>Лист Жнеца</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya+SC:wght@500;700&family=Alegreya+Sans:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: witcher inventory screen — header strip, two-column body (vitals | tabbed ledger), single deliberate dark look */
+:root {
+  --bg: #111513;
+  --panel: #181d1b;
+  --panel-2: #1f2522;
+  --line: #2e3632;
+  --fg: #d8dbd4;
+  --muted: #8d958f;
+  --blood: #a8322a;
+  --blood-dim: #5a211d;
+  --steel: #9fb3c2;
+  --gold: #bf9a5e;
+  --toxic: #7f9c45;
+  --energy: #6f8fc4;
+  --display: "Alegreya SC", "Palatino Linotype", Georgia, serif;
+  --body: "Alegreya Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { background: var(--bg); color: var(--fg); }
+body {
+  font-family: var(--body); font-size: 16px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 24px 48px;
+  background-image: radial-gradient(ellipse at 50% -10%, #1d2622 0%, transparent 60%);
+}
+.wrap { max-width: 1080px; margin: 0 auto; display: grid; gap: 20px; }
+h1, h2, h3 { font-family: var(--display); font-weight: 700; text-wrap: balance; margin: 0; letter-spacing: .02em; }
+.label { font-family: var(--display); font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+/* header */
+header { display: grid; grid-template-columns: auto 1fr auto; gap: 20px; align-items: center;
+  padding-block: 20px; border-bottom: 1px solid var(--line); }
+.medal { width: 72px; height: 72px; border-radius: 50%; border: 2px solid var(--steel);
+  display: grid; place-items: center; background: radial-gradient(circle, #2a332f, #141917); }
+.medal svg { width: 44px; height: 44px; }
+.name h1 { font-size: clamp(28px, 5vw, 44px); line-height: 1.05; }
+.name h1 em { font-style: normal; color: var(--blood); }
+.name p { margin: 4px 0 0; color: var(--muted); }
+.lvl { text-align: right; min-width: 0; }
+.lvl .big { font-family: var(--display); font-size: 40px; line-height: 1; color: var(--gold); }
+.xpbar { margin-top: 8px; width: 200px; max-width: 100%; height: 6px; background: var(--panel-2); border: 1px solid var(--line); }
+.xpbar i { display: block; height: 100%; background: var(--gold); }
+
+.cols { display: grid; grid-template-columns: 320px 1fr; gap: 20px; align-items: start; }
+.cols > * { min-width: 0; }
+.panel { background: var(--panel); border: 1px solid var(--line); padding: 18px; display: grid; gap: 14px; }
+
+/* vitals */
+.bar { display: grid; gap: 4px; }
+.bar .row { display: flex; justify-content: space-between; align-items: baseline; }
+.track { height: 10px; background: var(--panel-2); border: 1px solid var(--line); }
+.track i { display: block; height: 100%; }
+.adr { display: flex; gap: 8px; }
+.adr span { width: 16px; height: 16px; transform: rotate(45deg); border: 1px solid var(--gold); }
+.adr span.on { background: var(--gold); }
+
+.stats { display: grid; gap: 8px; }
+.stat { display: grid; grid-template-columns: 110px 1fr 24px; gap: 10px; align-items: center; }
+.pips { display: grid; grid-template-columns: repeat(10, 1fr); gap: 3px; }
+.pips i { height: 8px; background: var(--panel-2); border: 1px solid var(--line); }
+.pips i.on { background: var(--steel); border-color: var(--steel); }
+.stat.best .pips i.on { background: var(--blood); border-color: var(--blood); }
+.stat .num { text-align: right; }
+
+.meta { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.meta div { background: var(--panel-2); padding: 10px; border: 1px solid var(--line); }
+.meta b { display: block; font-family: var(--mono); font-size: 18px; font-weight: 500; }
+
+.glitch { border: 1px dashed var(--blood-dim); padding: 12px; font-family: var(--mono); font-size: 13px; color: var(--muted); position: relative; overflow: hidden; }
+.glitch span { color: var(--blood); }
+@media (prefers-reduced-motion: no-preference) {
+  .glitch span { animation: flick 4s infinite steps(1); }
+  @keyframes flick { 0%,92%,100% { opacity: 1 } 93% { opacity: .2 } 95% { opacity: .8 } 97% { opacity: 0 } }
+}
+
+/* tabs */
+.tabs { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--line); }
+.tabs button { font-family: var(--display); font-size: 15px; letter-spacing: .08em; background: none; color: var(--muted);
+  border: 1px solid transparent; border-bottom: none; padding: 10px 14px; cursor: pointer; }
+.tabs button:hover { color: var(--fg); }
+.tabs button[aria-selected="true"] { color: var(--fg); background: var(--panel); border-color: var(--line); margin-bottom: -1px; }
+.tabs button:focus-visible { outline: 2px solid var(--gold); outline-offset: -2px; }
+.view { background: var(--panel); border: 1px solid var(--line); border-top: none; padding: 18px; display: grid; gap: 18px; }
+
+.tree h3 { font-size: 18px; display: flex; justify-content: space-between; border-bottom: 1px solid var(--line); padding-bottom: 6px; }
+.tree h3 .num { font-size: 14px; color: var(--muted); }
+.skill { display: grid; grid-template-columns: 54px 1fr; gap: 12px; padding-block: 8px; align-items: start; }
+.rank { display: flex; gap: 3px; padding-top: 4px; }
+.rank i { width: 14px; height: 14px; border: 1px solid var(--line); background: var(--panel-2); }
+.rank i.on { background: var(--blood); border-color: var(--blood); }
+.skill b { display: block; }
+.skill small { color: var(--muted); font-size: 14px; }
+.skill.legacy .rank i.on { background: var(--gold); border-color: var(--gold); }
+
+.slots { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+.slot { border: 1px solid var(--line); background: var(--panel-2); padding: 12px; display: grid; gap: 4px; }
+.slot.red { border-left: 3px solid var(--blood); }
+.slot.empty { color: var(--muted); border-style: dashed; }
+
+table { width: 100%; border-collapse: collapse; }
+.tablebox { overflow-x: auto; }
+th, td { text-align: left; padding: 9px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--display); font-weight: 500; font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+td.num { white-space: nowrap; }
+.chip { display: inline-block; font-size: 12px; font-family: var(--mono); padding: 1px 6px; border: 1px solid var(--line); color: var(--muted); }
+.chip.tox { color: var(--toxic); border-color: var(--toxic); }
+
+.quest { border-left: 3px solid var(--gold); padding: 4px 0 4px 14px; display: grid; gap: 6px; }
+.quest h3 { font-size: 20px; }
+.quest ul { margin: 0; padding-left: 18px; color: var(--muted); }
+.quest p { margin: 0; }
+
+.bond { display: grid; grid-template-columns: 1fr 140px 48px; gap: 12px; align-items: center; padding-block: 10px; border-bottom: 1px solid var(--line); }
+.bond small { display: block; color: var(--muted); }
+.aff { height: 8px; background: var(--panel-2); border: 1px solid var(--line); position: relative; }
+.aff::after { content: ""; position: absolute; left: 50%; top: -3px; bottom: -3px; width: 1px; background: var(--muted); }
+.aff i { position: absolute; top: 0; bottom: 0; }
+.rep p { margin: 0; }
+.rep { display: grid; gap: 10px; max-width: 65ch; }
+
+footer { color: var(--muted); font-size: 13px; text-align: center; }
+
+@media (max-width: 780px) {
+  .cols { grid-template-columns: 1fr; }
+  header { grid-template-columns: auto 1fr; }
+  .lvl { grid-column: 1 / -1; text-align: left; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+  .lvl .xpbar { margin-top: 0; }
+  .bond { grid-template-columns: 1fr 90px 40px; }
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="medal" aria-hidden="true">
+      <svg viewBox="0 0 48 48" fill="none" stroke="#9fb3c2" stroke-width="2" stroke-linejoin="round">
+        <path d="M8 10 L16 20 L20 12 L24 18 L28 12 L32 20 L40 10 L38 28 L30 40 L24 36 L18 40 L10 28 Z" fill="#1f2522"/>
+        <path d="M17 26 L21 28 M31 26 L27 28" stroke="#a8322a"/>
+        <path d="M21 34 L24 32 L27 34"/>
+      </svg>
+    </div>
+    <div class="name">
+      <h1>Шин Нодзен <em>«Жнец»</em></h1>
+      <p>Ведьмак Школы Волка · 28 лет · 186 см, 88 кг · пепельные пряди, кошачьи глаза</p>
+    </div>
+    <div class="lvl">
+      <div><span class="label">Уровень</span> <span class="big" id="lvl"></span></div>
+      <div>
+        <div class="xpbar"><i id="xpfill"></i></div>
+        <div class="num" style="font-size:13px;color:var(--muted);margin-top:4px" id="xptext"></div>
+      </div>
+    </div>
+  </header>
+
+  <div class="cols">
+    <aside class="panel" aria-label="Состояние">
+      <div id="vitals" style="display:grid;gap:12px"></div>
+      <div class="bar">
+        <div class="row"><span class="label">Адреналин</span><span class="num" id="adrtext"></span></div>
+        <div class="adr" id="adr"></div>
+      </div>
+      <div class="label" style="margin-top:6px">Характеристики</div>
+      <div class="stats" id="stats"></div>
+      <div class="meta">
+        <div><span class="label">Кроны</span><b id="crowns"></b></div>
+        <div><span class="label">Конь</span><b style="font-family:var(--display)">Плотва</b></div>
+        <div style="grid-column:1/-1"><span class="label">Дата · место</span><b style="font-family:var(--body);font-size:15px" id="where"></b></div>
+      </div>
+      <div class="glitch" aria-label="Неизвестный раздел">
+        <div class="label" style="color:var(--blood)">???</div>
+        ▓▓▒░ <span>нет данных</span> ░▒▓<br>
+        Иногда — шёпот там, где никого нет.
+      </div>
+    </aside>
+
+    <section aria-label="Журнал ведьмака">
+      <div class="tabs" role="tablist" id="tabs"></div>
+      <div class="view" id="view"></div>
+    </section>
+  </div>
+
+  <footer>Лист обновляется мастером после каждой сцены</footer>
+</div>
+
+<script>
+const D = {
+  level: 5, xp: 0, xpNext: 500,
+  hp: [30, 30], energy: [10, 10], tox: [0, 12], adr: [0, 3],
+  crowns: 140,
+  where: "3 листопада 1271, полдень · Ольшанка, восточные болота Мельтара",
+  stats: [["Сила",6],["Ловкость",8],["Выносливость",6],["Разум",5],["Воля",5],["Обаяние",3]],
+  trees: [
+    { name: "Наследие Земли", legacy: true, skills: [
+      ["Профессиональный убийца", 1, 1, "Скрытность, засады, ножи, яды, замки, маскировка, допрос, чтение людей, тактика, первая помощь. +2 к таким проверкам; удар из засады — критический."]
+    ]},
+    { name: "Бой", skills: [
+      ["Быстрые атаки", 2, 3, "Серии быстрых ударов точнее и опаснее."],
+      ["Смертельная точность", 1, 3, "+2 при атаке в изученную уязвимость чудовища."],
+      ["Уклонение", 1, 3, "Легче уходить из-под удара; удачное уклонение даёт адреналин."]
+    ]},
+    { name: "Знаки", skills: [
+      ["Усиленный Квен", 1, 3, "Щит держит 2 удара вместо одного."],
+      ["Аксий-марионетка", 1, 3, "Внушение и допрос: слабовольные говорят правду или делают, что велено."]
+    ]},
+    { name: "Алхимия", skills: [
+      ["Привычка к токсинам", 1, 3, "Эликсиры дают на 1 токсичность меньше."],
+      ["Яды на клинках", 1, 3, "Масло держится на клинке дольше."]
+    ]},
+    { name: "База Школы Волка", legacy: true, skills: [
+      ["Выучка Волка", 1, 1, "Оба меча без штрафов, все пять Знаков, ведьмачье чутьё, алхимия по рецептам."]
+    ]}
+  ],
+  freePoints: 0,
+  mutagens: [["red","Малый красный мутаген","Из накера-вожака · +1 к урону мечом"], ["empty","Пустая ячейка","Нужен мутаген сильного чудовища"]],
+  weapons: [
+    ["Стальной меч Школы Волка","Базовый","урон 6","против людей и зверей"],
+    ["Серебряный меч Школы Волка","Базовый","урон 6","против чудовищ"],
+    ["Нож за голенищем","—","урон 3","скрытое оружие, привычка с Земли"],
+    ["Куртка Школы Волка","Базовая","броня 2","лёгкая, не мешает уклоняться"],
+    ["Медальон Волка","—","—","дрожит рядом с магией"]
+  ],
+  alchemy: [
+    ["Ласточка",2,"лечение +10 HP",3],
+    ["Гром",1,"+2 к урону",4],
+    ["Кошка",1,"зрение в темноте",2],
+    ["Масло против трупоедов",1,"бонус против гулей, утопцев, накеров",0],
+    ["Масло против призраков",1,"бонус против призраков",0],
+    ["Лунная пыль",1,"призрак не может стать неосязаемым",0],
+    ["Самум",1,"оглушение вспышкой",0]
+  ],
+  misc: "Набор алхимика, травы (обычные), верёвка, огниво, бинты, потрёпанная колода гвинта",
+  quests: [
+    { title: "Болотница с Чёрного пруда", tag: "Контракт", giver: "Староста Мирон · 200 крон",
+      text: "За месяц у старой мельницы на Чёрном пруду пропали трое парней. Деревня винит «болотницу».",
+      steps: ["Узнать, что за чудовище", "Осмотреть мельницу и пруд"] }
+  ],
+  bonds: [
+    ["Вереск", "Наставник, Каэр Вольф", 70],
+    ["Мирон", "Староста Ольшанки, заказчик", 0]
+  ],
+  rep: [
+    "<b>Простой народ:</b> пугало и легенда. «Не будешь спать — придёт Жнец». О тебе поют мрачную балладу «Жнец из Тумана», наполовину враньё.",
+    "<b>Ведьмаки, наёмники, преступный мир:</b> тихая легенда. Профессионал, который всегда доводит дело до конца. Платят дороже.",
+    "<b>Прозвище «Жнец»</b> — с 1266 года, после резни гулей в Дубовом Логе.",
+    "Знакомства, долги и старые счёты за девять лет всплывут по ходу игры."
+  ]
+};
+
+const $ = s => document.querySelector(s);
+const pct = (a,b) => Math.max(0, Math.min(100, a / b * 100));
+
+$("#lvl").textContent = D.level;
+$("#xpfill").style.width = pct(D.xp, D.xpNext) + "%";
+$("#xptext").textContent = `XP ${D.xp} / ${D.xpNext}`;
+$("#crowns").textContent = D.crowns;
+$("#where").textContent = D.where;
+
+$("#vitals").innerHTML = [["Здоровье", D.hp, "var(--blood)"], ["Энергия", D.energy, "var(--energy)"], ["Токсичность", D.tox, "var(--toxic)"]]
+  .map(([n,[a,b],c]) => `<div class="bar"><div class="row"><span class="label">${n}</span><span class="num">${a} / ${b}</span></div>
+  <div class="track"><i style="width:${pct(a,b)}%;background:${c}"></i></div></div>`).join("");
+
+$("#adrtext").textContent = `${D.adr[0]} / ${D.adr[1]}`;
+$("#adr").innerHTML = Array.from({length: D.adr[1]}, (_, i) => `<span class="${i < D.adr[0] ? "on" : ""}"></span>`).join("");
+
+const best = Math.max(...D.stats.map(s => s[1]));
+$("#stats").innerHTML = D.stats.map(([n,v]) => `<div class="stat${v === best ? " best" : ""}"><span>${n}</span>
+  <div class="pips">${Array.from({length:10},(_,i)=>`<i class="${i<v?"on":""}"></i>`).join("")}</div><span class="num">${v}</span></div>`).join("");
+
+const ranks = (r, m) => `<div class="rank">${Array.from({length:m},(_,i)=>`<i class="${i<r?"on":""}"></i>`).join("")}</div>`;
+
+const views = {
+  skills: { name: "Навыки", render: () => `
+    <div class="row" style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <span class="label">Вложено очков: <span class="num">8</span></span>
+      <span class="label">Свободных: <span class="num">${D.freePoints}</span></span>
+    </div>
+    ${D.trees.map(t => `<div class="tree"><h3>${t.name}${t.legacy ? "" : `<span class="num">${t.skills.reduce((a,s)=>a+s[1],0)} оч.</span>`}</h3>
+      ${t.skills.map(([n,r,m,d]) => `<div class="skill${t.legacy ? " legacy" : ""}">${ranks(r,m)}<div><b>${n}${m>1?` <span class="num" style="color:var(--muted);font-weight:400">${["","I","II","III"][r]}</span>`:""}</b><small>${d}</small></div></div>`).join("")}
+    </div>`).join("")}
+    <div><div class="label" style="margin-bottom:8px">Мутагены</div><div class="slots">
+      ${D.mutagens.map(([c,n,d]) => `<div class="slot ${c}"><b>${n}</b><small style="color:var(--muted)">${d}</small></div>`).join("")}
+    </div></div>` },
+  gear: { name: "Снаряжение", render: () => `
+    <div class="tablebox"><table><thead><tr><th>Предмет</th><th>Уровень</th><th>Сила</th><th>Заметка</th></tr></thead><tbody>
+      ${D.weapons.map(w => `<tr><td>${w[0]}</td><td>${w[1]}</td><td class="num">${w[2]}</td><td style="color:var(--muted)">${w[3]}</td></tr>`).join("")}
+    </tbody></table></div>
+    <div class="tablebox"><table><thead><tr><th>Алхимия</th><th>Шт.</th><th>Действие</th><th>Токс.</th></tr></thead><tbody>
+      ${D.alchemy.map(a => `<tr><td>${a[0]}</td><td class="num">×${a[1]}</td><td style="color:var(--muted)">${a[2]}</td><td>${a[3] ? `<span class="chip tox">${a[3]}</span>` : `<span class="chip">—</span>`}</td></tr>`).join("")}
+    </tbody></table></div>
+    <p style="margin:0;color:var(--muted)">${D.misc}</p>` },
+  quests: { name: "Задания", render: () => D.quests.map(q => `<div class="quest">
+      <span class="label" style="color:var(--gold)">${q.tag}</span><h3>${q.title}</h3>
+      <p style="color:var(--muted)">${q.giver}</p><p>${q.text}</p>
+      <ul>${q.steps.map(s=>`<li>${s}</li>`).join("")}</ul></div>`).join("") },
+  bonds: { name: "Связи", render: () => `
+    <div>${D.bonds.map(([n,r,v]) => {
+      const w = Math.abs(v) / 2, left = v >= 0 ? 50 : 50 - w;
+      return `<div class="bond"><div><b>${n}</b><small>${r}</small></div>
+      <div class="aff"><i style="left:${left}%;width:${w}%;background:${v>=0?"var(--steel)":"var(--blood)"}"></i></div>
+      <span class="num" style="text-align:right">${v>0?"+":""}${v}</span></div>`; }).join("")}</div>
+    <div class="rep"><div class="label">Репутация</div>${D.rep.map(r=>`<p>${r}</p>`).join("")}</div>` }
+};
+
+const keys = Object.keys(views);
+function show(k) {
+  if (!views[k]) k = keys[0];
+  document.querySelectorAll("#tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.k === k));
+  $("#view").innerHTML = views[k].render();
+  try { localStorage.setItem("tab", k); } catch (e) {}
+}
+$("#tabs").innerHTML = keys.map(k => `<button role="tab" id="tab-${k}" data-k="${k}">${views[k].name}</button>`).join("");
+$("#tabs").addEventListener("click", e => { const b = e.target.closest("button"); if (b) show(b.dataset.k); });
+let start = location.hash.slice(1);
+if (!views[start]) { try { start = localStorage.getItem("tab"); } catch (e) {} }
+show(start);
+</script>
