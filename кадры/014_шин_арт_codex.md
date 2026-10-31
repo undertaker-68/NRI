@@ -17,3 +17,8 @@ Style: premium dark fantasy painted key art with realistic anatomy and tactile m
 Composition: vertical 2:3, chest-up three-quarter shoulders with head turned toward the viewer. Face and wolf medallion are focal points; both sword hilts plausibly rise behind his shoulders. Leave clear breathing room above his hair.
 Lighting and color: cold soft overcast daylight, desaturated blue-grey and moss-green setting, pale gold irises as small accents; subtle edge light on wet leather, detailed skin.
 Constraints: retain short ash-grey hair, mixed East Asian-European face, apparent age about 28, stubble, pale gold slit pupils, dark studded leather and two swords. Do not resemble Geralt's older face or add long white ponytail, beard, extra swords, glowing magic, a crown, monsters or unplayed events. Natural proportions. Opaque background.
+
+## Ревью v1 (Claude Code)
+- Хорошо: пепельные волосы, шрам на скуле, щетина, тёмная кожа с заклёпками, медальон Волка, два меча, болотный тракт под дождём, настроение.
+- Исправить в v2: зрачки должны быть **вертикальными, кошачьими** (сейчас читаются как обычные); черты лица смешанные **восточноазиатско-европейские** (сейчас скорее европейские); навершие серебряного меча без «солнечного колеса» (похоже на символ Белого Солнца, чужой фракции), лучше простое или с волком.
+- Статус: ждёт выбора игрока; при v2 сохранить композицию и свет.

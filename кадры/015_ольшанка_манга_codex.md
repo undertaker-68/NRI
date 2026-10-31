@@ -26,3 +26,11 @@ Panel 2, middle left, intimate detail: the same mare's hoof presses into a shall
 Panel 3, middle right: the same Shin in close three-quarter portrait as the provided reference, hood down, wet ash-grey strands across his forehead, pale eyes with slit pupils shown in black ink, faint scars and stubble. Calm, observant, experienced; not scowling or blank. Wolf medallion and one shoulder strap partly visible. Realistic facial proportions.
 Panel 4, wide bottom atmospheric reveal: camera from just behind Shin on his mare looks down the village lane across a still black pond; a dilapidated wooden watermill with a broken waterwheel is visible through low fog. The rider is a modest foreground silhouette, mill and pond dominate depth. No monsters or ghosts, no new events.
 Style: mature dark fantasy manga, meticulous hand-drawn linework, organic brush ink, dense but readable crosshatching, strong chiaroscuro, fine dot screentone, subtle rain speed lines. Black and white only, no color accents. Not a photomontage, not grayscale photography or 3D. Realistic anatomy and coherent perspective. Retain one consistent character identity across panels. No other named characters. This page depicts arrival only, with no combat or magic.
+
+## Ревью v1 (Claude Code)
+- Хорошо: четыре панели в нужном порядке, атмосфера дождя, мельница с колесом над Чёрным прудом, жители за ставнями, немая сцена без текста.
+- Исправить в v2:
+  - Панель 2: копыто анатомически неверное (похоже на пень/сапог). Нужна правдоподобная лошадиная нога с бабкой и подковой.
+  - Панель 1: на заднем плане церковь с православными крестами. В мире кампании нет христианства: храмы Мелитэле или Ордена Очищающего Пламени, без крестов.
+  - Панель 3: волосы читаются светлыми/блондинистыми, нужны **пепельно-серые**; зрачки вертикальные.
+  - Плотва: гнедая с белой проточиной на морде, проточину стоит показать хотя бы в одной панели.
