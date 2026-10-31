@@ -1,0 +1,17 @@
+{
+  "format": "MP3 / MPEG-1 Layer III",
+  "bytes": 4149498,
+  "frames": 4964,
+  "sample_rates_hz": [
+    44100
+  ],
+  "bitrates_bps": [
+    256000
+  ],
+  "channels": [
+    1
+  ],
+  "duration_seconds": 129.67183673469387,
+  "sha256": "bd573f010f2e5b3f85c0cfbb28c58b232b6d6bc304beba06e972295569f2702e",
+  "listening_performed": false
+}

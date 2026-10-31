@@ -1,0 +1,43 @@
+{
+  "status": "generated",
+  "voice": {
+    "name": "Grigory - Warm & Expressive",
+    "id": "d7c91f5e68db45c180f555f5e3b8552f"
+  },
+  "request": {
+    "engine": "heygen_voice",
+    "inputType": "text",
+    "language": "ru",
+    "speed": 1,
+    "script": "script.txt",
+    "characters": 2003
+  },
+  "response": {
+    "engine": "orca",
+    "request_id": "66152c10d3624f31b4f2a42bb042efff",
+    "duration_seconds": 129.67183673469387,
+    "audio_url": "https://resource2.heygen.ai/text_to_speech/43a2f20ffb984953801c96930e650086/d7c91f5e68db45c180f555f5e3b8552f/id=083e29d7-c31b-4269-9608-2ef188e4c5f8.wav"
+  },
+  "local_audio": "grigory-v1.mp3",
+  "attempts": [
+    {
+      "engine": "starfish",
+      "outcome": "rejected",
+      "http_status": 400
+    },
+    {
+      "engine": "heygen_voice",
+      "outcome": "generated",
+      "user_authorized_retry": true
+    }
+  ],
+  "review": {
+    "listening_performed": false,
+    "actual_spoken_transcript_verified": false,
+    "note": "No listening or transcription tool available. Provider timestamps include zero-duration words and have not been validated for subtitles.",
+    "audio_validation_file": "audio-validation.json",
+    "measured_duration_seconds": 129.67183673469387,
+    "format_note": "Provider URL and MIME describe WAV, but the unchanged bytes are MPEG-1 Layer III. Local extension corrected to .mp3."
+  },
+  "word_timestamps_file": "provider-word-timestamps.json"
+}
