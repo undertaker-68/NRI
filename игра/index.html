@@ -174,7 +174,9 @@ function bootError(msg) { var t = document.getElementById('title'); if (!t) retu
 window.addEventListener('error', function (e) { bootError('Ошибка: ' + (e.message || e) + (e.lineno ? ' (строка ' + e.lineno + ')' : '')); });
 window.addEventListener('unhandledrejection', function (e) { bootError('Ошибка: ' + (e.reason && e.reason.message || e.reason)); });
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="three.min.js"></script>
+<script>if (!window.THREE) document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"><\/script>');</script>
+<script>if (!window.THREE) document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');</script>
 <script>
 (() => {
 if (!window.THREE) { bootError('Не загрузилась библиотека 3D-графики (three.js). Проверь интернет и обнови страницу.'); return; }
