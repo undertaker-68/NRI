@@ -1,4 +1,5 @@
 <title>Красные врата Гронека</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya+SC:wght@500;700&family=Alegreya+Sans:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
@@ -168,9 +169,15 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
   </div>
 </div>
 
+<script>
+function bootError(msg) { var t = document.getElementById('title'); if (!t) return; var d = document.getElementById('bootErr'); if (!d) { d = document.createElement('p'); d.id = 'bootErr'; d.style.cssText = 'color:#ff9d8f;font-family:monospace;font-size:13px;text-align:left;white-space:pre-wrap'; t.querySelector('.in').appendChild(d); } d.textContent = msg; t.hidden = false; }
+window.addEventListener('error', function (e) { bootError('Ошибка: ' + (e.message || e) + (e.lineno ? ' (строка ' + e.lineno + ')' : '')); });
+window.addEventListener('unhandledrejection', function (e) { bootError('Ошибка: ' + (e.reason && e.reason.message || e.reason)); });
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 (() => {
+if (!window.THREE) { bootError('Не загрузилась библиотека 3D-графики (three.js). Проверь интернет и обнови страницу.'); return; }
 'use strict';
 const $ = s => document.querySelector(s);
 let SPEED = 1;
@@ -195,7 +202,8 @@ function loadSave() { try { const s = localStorage.getItem(SAVE); return s ? JSO
 
 /* ================= THREE ================= */
 const canvas = $('#c');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+let renderer;
+try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true }); } catch (e) { bootError('Телефон не дал игре 3D-графику (WebGL). Попробуй открыть ссылку в Chrome или Safari, а не во встроенном окне приложения.'); return; }
 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 200);
@@ -1574,8 +1582,8 @@ function start(data) {
   $('#bNew').onclick = () => { G = freshGame(); $('#title').hidden = true; enterLevel(0); };
   $('#bCont').onclick = () => { G = saved; $('#title').hidden = true; const cp = G.cp; G = JSON.parse(JSON.stringify(cp)); snapshotCP(); enterLevel(G.lvl, true); };
 }
-window.claude?.hot?.snapshot?.(() => ({ G }));
-window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
-window.__dbg = { speed: v => SPEED = v, myTurn: () => !!turnResolve, walk: (x, y) => { const s = shin(); const p = astar(s, x, y, { passAllies: true, goalBlocked: true }); if (p) { if (p.length && unitAt(p[p.length - 1].x, p[p.length - 1].y, s)) p.pop(); s.queue = p; } return !!p; }, startCombat: g => startCombat(g), get G() { return G; }, enterLevel: i => { G = G || freshGame(); $('#title').hidden = true; return enterLevel(i); }, units, get C() { return C; }, get L() { return L; }, tap: (x, y) => C ? combatTap(x, y) : null, onAct, shin };
+start({});
+try { const h = window.claude && window.claude.hot; if (h && typeof h.snapshot === 'function') h.snapshot(() => ({ G })); } catch (e) {}
+window.__dbg = { scr: (x, y) => toScreen(x, y, 0), busy: () => ui.busy, speed: v => SPEED = v, myTurn: () => !!turnResolve, walk: (x, y) => { const s = shin(); const p = astar(s, x, y, { passAllies: true, goalBlocked: true }); if (p) { if (p.length && unitAt(p[p.length - 1].x, p[p.length - 1].y, s)) p.pop(); s.queue = p; } return !!p; }, startCombat: g => startCombat(g), get G() { return G; }, enterLevel: i => { G = G || freshGame(); $('#title').hidden = true; return enterLevel(i); }, units, get C() { return C; }, get L() { return L; }, tap: (x, y) => C ? combatTap(x, y) : null, onAct, shin };
 })();
 </script>
