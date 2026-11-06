@@ -1,0 +1,1581 @@
+<title>Красные врата Гронека</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya+SC:wght@500;700&family=Alegreya+Sans:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: full-bleed 3D canvas; HUD hugs the safe-area edges; one bottom sheet for dialogue and actions */
+:root {
+  --bg: #0b0d0f;
+  --panel: rgba(13, 15, 17, .9);
+  --panel-solid: #121519;
+  --line: #2c3238;
+  --fg: #e8e3d6;
+  --muted: #9d978a;
+  --salt: #efe8d8;
+  --blood: #b8392c;
+  --gold: #c9a35a;
+  --silver: #a9c1d6;
+  --energy: #6f93cf;
+  --display: "Alegreya SC", "Palatino Linotype", Georgia, serif;
+  --body: "Alegreya Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  color-scheme: dark;
+}
+[hidden] { display: none !important; }
+html, body { height: 100%; background: var(--bg); color: var(--fg); overflow: hidden; touch-action: none; }
+body { font-family: var(--body); font-size: 16px; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+#c { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+/* HUD */
+.hud-top { position: fixed; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;
+  padding: calc(env(safe-area-inset-top, 0px) + 8px) max(10px, env(safe-area-inset-right, 0px)) 0 max(10px, env(safe-area-inset-left, 0px)); pointer-events: none; z-index: 5; }
+.card { pointer-events: auto; background: var(--panel); border: 1px solid var(--line); padding: 8px 10px; min-width: 0; }
+.who { display: grid; gap: 4px; width: min(220px, 52vw); }
+.who b { font-family: var(--display); font-size: 16px; letter-spacing: .03em; }
+.bar { height: 7px; background: #1d2227; border: 1px solid var(--line); position: relative; }
+.bar i { position: absolute; inset: 0 auto 0 0; display: block; }
+.bar.hp i { background: var(--blood); }
+.bar.en i { background: var(--energy); }
+.row { display: flex; justify-content: space-between; gap: 6px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.pips { display: flex; gap: 4px; align-items: center; font-size: 12px; color: var(--muted); }
+.pips span { width: 9px; height: 9px; transform: rotate(45deg); border: 1px solid var(--gold); }
+.pips span.on { background: var(--gold); }
+.tools { display: flex; gap: 6px; pointer-events: auto; flex-wrap: wrap; justify-content: flex-end; }
+.btn { background: var(--panel); border: 1px solid var(--line); padding: 8px 12px; min-height: 40px; font-family: var(--display); font-size: 14px; letter-spacing: .04em; }
+.btn.on { border-color: var(--blood); color: #ffd9d2; box-shadow: inset 0 0 0 1px var(--blood); }
+.btn:disabled { opacity: .38; }
+#loc { position: fixed; left: 50%; transform: translateX(-50%); top: 38%; font-family: var(--display); font-size: 18px; letter-spacing: .16em; color: var(--salt); text-transform: uppercase; z-index: 4; pointer-events: none; white-space: nowrap; transition: opacity .8s; text-shadow: 0 1px 3px #000; }
+
+/* initiative */
+#order { position: fixed; left: 0; right: 0; top: calc(env(safe-area-inset-top, 0px) + 132px); display: flex; justify-content: center; gap: 4px; flex-wrap: wrap; padding-inline: 10px; z-index: 4; pointer-events: none; }
+#order span { font-size: 12px; padding: 3px 7px; background: var(--panel); border: 1px solid var(--line); color: var(--muted); }
+#order span.p { color: var(--silver); }
+#order span.e { color: #f0b4a8; }
+#order span.now { border-color: var(--gold); color: var(--fg); }
+
+/* bottom */
+.bottom { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; display: grid; gap: 6px;
+  padding: 8px max(10px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 10px) max(10px, env(safe-area-inset-left, 0px)); pointer-events: none; }
+#log { font-size: 13px; color: var(--muted); display: grid; gap: 2px; text-shadow: 0 1px 2px #000; max-width: 560px; }
+#log div:last-child { color: var(--fg); }
+#acts { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; pointer-events: auto; max-width: 560px; width: 100%; justify-self: center; }
+#acts button { background: var(--panel); border: 1px solid var(--line); min-height: 50px; padding: 4px 2px; display: grid; place-items: center; gap: 0; line-height: 1.1; }
+#acts button b { font-family: var(--display); font-size: 14px; font-weight: 500; }
+#acts button small { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+#acts button.sel { border-color: var(--gold); background: #2a2416; }
+#acts button.end { border-color: #5a3a33; }
+#acts button:disabled { opacity: .35; }
+#hint { font-size: 13px; color: var(--muted); text-align: center; text-shadow: 0 1px 2px #000; min-height: 18px; }
+
+/* dialogue sheet */
+#dlg { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: linear-gradient(transparent, rgba(5,6,7,.96) 22%); pointer-events: auto;
+  padding: 40px max(16px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 16px) max(16px, env(safe-area-inset-left, 0px)); }
+#dlg .in { max-width: 620px; margin: 0 auto; display: grid; gap: 10px; }
+#dlg .name { font-family: var(--display); font-size: 15px; letter-spacing: .1em; color: var(--gold); text-transform: uppercase; }
+#dlg .text { font-size: 18px; line-height: 1.45; text-wrap: pretty; }
+#dlg .text em { color: var(--muted); font-style: italic; }
+#dlg .ch { display: grid; gap: 6px; }
+#dlg .ch button { text-align: left; background: #171b1f; border: 1px solid var(--line); padding: 11px 12px; font-size: 16px; line-height: 1.3; }
+#dlg .ch button small { color: var(--muted); font-family: var(--mono); font-size: 12px; }
+#dlg .tap { font-size: 12px; color: var(--muted); text-align: right; font-family: var(--mono); }
+
+/* system window */
+#sys { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; background: rgba(0,0,0,.55); padding-inline: max(16px, env(safe-area-inset-left, 0px)); }
+#sys .box { width: min(520px, 100%); background: #0c1116; border: 1px solid #47637a; box-shadow: 0 0 0 1px #1a2a37, 0 0 40px rgba(110,160,210,.18); padding: 18px; display: grid; gap: 8px; font-family: var(--mono); font-size: 14px; line-height: 1.45; color: #cfe0ee; }
+#sys .box div { white-space: pre-wrap; }
+#sys .box .gl { color: #e7a199; }
+#sys .box button { justify-self: end; margin-top: 6px; font-family: var(--mono); background: #12202b; border: 1px solid #47637a; padding: 9px 16px; }
+
+/* screens */
+.screen { position: fixed; inset: 0; z-index: 40; display: grid; place-items: center; background: radial-gradient(ellipse at 50% 30%, #1b2024 0%, #08090a 70%); padding-inline: max(16px, env(safe-area-inset-left, 0px)); padding-block: 24px; overflow-y: auto; }
+.screen .in { max-width: 560px; display: grid; gap: 14px; text-align: center; }
+.screen h1 { font-family: var(--display); font-weight: 700; font-size: clamp(34px, 9vw, 58px); line-height: 1; margin: 0; letter-spacing: .02em; text-wrap: balance; }
+.screen h1 span { color: var(--blood); display: block; font-size: .45em; letter-spacing: .2em; margin-bottom: 8px; }
+.screen p { margin: 0; color: var(--muted); line-height: 1.5; text-wrap: pretty; }
+.screen .acts { display: grid; gap: 8px; justify-items: center; }
+.screen .acts .btn { min-width: 220px; font-size: 16px; }
+.screen .help { font-size: 14px; text-align: left; display: grid; gap: 4px; border-top: 1px solid var(--line); padding-top: 12px; }
+.screen .help b { color: var(--fg); font-weight: 500; }
+
+/* overlays in 3D */
+#tags { position: fixed; inset: 0; pointer-events: none; z-index: 3; overflow: hidden; }
+.tag { position: absolute; transform: translate(-50%, -100%); display: grid; gap: 2px; justify-items: center; font-size: 11px; white-space: nowrap; text-shadow: 0 1px 2px #000; }
+.tag .hb { width: 44px; height: 4px; background: #1d2227; border: 1px solid #000; }
+.tag .hb i { display: block; height: 100%; background: var(--blood); }
+.tag.p .hb i { background: #7fa7c9; }
+.tag .st { color: var(--gold); font-size: 10px; }
+.bubble { position: absolute; transform: translate(-50%, -100%); max-width: 230px; background: rgba(12,14,16,.92); border: 1px solid var(--line); padding: 5px 8px; font-size: 13px; line-height: 1.3; white-space: normal; text-align: left; }
+.bubble b { color: var(--gold); font-weight: 500; }
+.fx { position: absolute; transform: translate(-50%, -100%); font-family: var(--display); font-size: 18px; font-weight: 700; text-shadow: 0 2px 3px #000; animation: up 1.1s ease-out forwards; }
+@keyframes up { from { opacity: 1; margin-top: 0 } to { opacity: 0; margin-top: -42px } }
+@media (prefers-reduced-motion: reduce) { .fx { animation: none; } }
+#fade { position: fixed; inset: 0; background: #000; z-index: 35; pointer-events: none; opacity: 0; transition: opacity .6s; }
+#fade.on { opacity: 1; }
+#bag { position: fixed; inset: 0; z-index: 25; display: grid; place-items: end center; background: rgba(0,0,0,.4); padding: 0 max(12px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 12px) max(12px, env(safe-area-inset-left, 0px)); }
+#bag .in { width: min(520px, 100%); background: var(--panel-solid); border: 1px solid var(--line); padding: 12px; display: grid; gap: 6px; }
+#bag .in h3 { margin: 0; font-family: var(--display); font-size: 16px; letter-spacing: .08em; }
+#bag .in button { text-align: left; background: #171b1f; border: 1px solid var(--line); padding: 10px; display: flex; justify-content: space-between; gap: 8px; }
+#bag .in button span { color: var(--muted); font-size: 13px; }
+</style>
+
+<canvas id="c" aria-label="Игровое поле"></canvas>
+<div id="tags"></div>
+
+<div class="hud-top">
+  <div class="card who" id="who">
+    <b>Шин <span style="color:var(--blood)">«Жнец»</span></b>
+    <div class="bar hp"><i id="hpb"></i></div>
+    <div class="row"><span>Здоровье</span><span id="hpt"></span></div>
+    <div class="bar en"><i id="enb"></i></div>
+    <div class="row"><span>Энергия</span><span id="ent"></span></div>
+    <div class="pips" id="quen"></div>
+  </div>
+  <div class="tools">
+    <button class="btn" id="bQuen">Квен</button>
+    <button class="btn" id="bSense" aria-pressed="false">Чутьё</button>
+    <button class="btn" id="bBag">Сумка</button>
+    <button class="btn" id="bMenu">Меню</button>
+  </div>
+</div>
+<div id="loc"></div>
+<div id="order" hidden></div>
+
+<div class="bottom">
+  <div id="log"></div>
+  <div id="hint"></div>
+  <div id="acts" hidden></div>
+</div>
+
+<div id="dlg" hidden><div class="in"><div class="name" id="dName"></div><div class="text" id="dText"></div><div class="ch" id="dCh"></div><div class="tap" id="dTap">коснись, чтобы продолжить</div></div></div>
+<div id="sys" hidden><div class="box" id="sysBox"></div></div>
+<div id="bag" hidden><div class="in" id="bagIn"></div></div>
+<div id="fade"></div>
+
+<div class="screen" id="title">
+  <div class="in">
+    <h1><span>Жнец · первая арка</span>Красные врата Гронека</h1>
+    <p>Соляные копи Гронека проглотили двух солекопов и пятерых братьев Ордена. Врата прорвутся на рассвете. Шин Нодзен, ведьмак Школы Волка, спускается вниз вместе с Героем Меча, Героиней Лука, островитянкой и братом-целителем.</p>
+    <div class="acts">
+      <button class="btn" id="bNew">Новая игра</button>
+      <button class="btn" id="bCont" hidden>Продолжить</button>
+    </div>
+    <div class="help">
+      <div><b>Касание по земле</b> — идти. <b>По врагу</b> — атаковать. <b>По предмету или человеку</b> — подойти и взаимодействовать.</div>
+      <div><b>Перетаскивание</b> — сдвинуть камеру, <b>двумя пальцами</b> — приблизить.</div>
+      <div><b>Чутьё</b> — ведьмачье чутьё: следы, тяга, слабые места. <b>Бой пошаговый:</b> движение, действие и одно быстрое действие (финт или зелье).</div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+let SPEED = 1;
+const sleep = ms => new Promise(r => setTimeout(r, ms * SPEED));
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const cheb = (a, b) => Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
+const dst = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+const K = (x, y) => x + ',' + y;
+const rnd = a => a[Math.floor(Math.random() * a.length)];
+
+/* ================= STATE ================= */
+const SAVE = 'zhnets-arc1-v1';
+let G = null;
+function freshGame() {
+  return { lvl: 0, xp: 0, hp: 39, en: 14, quen: 0,
+    inv: { lastochka: 3, grom: 1, neyasyt: 1, petri: 1, oil: 1, moon: 1, samum: 1, water: 4 },
+    allies: { ren: 70, li: 40, ragna: 45, yon: 40 }, flags: {}, cp: null };
+}
+function snapshotCP() { const c = JSON.parse(JSON.stringify(G)); c.cp = null; G.cp = c; }
+function save() { try { localStorage.setItem(SAVE, JSON.stringify(G)); } catch (e) {} }
+function loadSave() { try { const s = localStorage.getItem(SAVE); return s ? JSON.parse(s) : null; } catch (e) { return null; } }
+
+/* ================= THREE ================= */
+const canvas = $('#c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 200);
+let camDist = 17, camPan = new THREE.Vector3(), camFocus = new THREE.Vector3();
+const amb = new THREE.AmbientLight(0x56606a, 0.75); scene.add(amb);
+const hemi = new THREE.HemisphereLight(0x8fa2b4, 0x1a1512, 0.45); scene.add(hemi);
+const moon = new THREE.DirectionalLight(0xb9c7d6, 0.35); moon.position.set(-6, 14, 8); scene.add(moon);
+const torch = new THREE.PointLight(0xffa04a, 1.6, 11, 1.6); scene.add(torch);
+const aura = new THREE.PointLight(0x9fc3ff, 0.0, 9, 1.8); scene.add(aura);
+function resize() { const w = window.innerWidth, h = window.innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+window.addEventListener('resize', resize); resize();
+
+const matCache = {};
+function mat(color, opts = {}) {
+  const k = color + JSON.stringify(opts);
+  if (!matCache[k]) matCache[k] = new THREE.MeshStandardMaterial(Object.assign({ color, roughness: .85, metalness: .05 }, opts));
+  return matCache[k];
+}
+const GEO = {
+  tile: new THREE.BoxGeometry(1, .1, 1), wall: new THREE.BoxGeometry(1, 1.2, 1),
+  body: new THREE.CylinderGeometry(.2, .27, .78, 10), head: new THREE.SphereGeometry(.16, 12, 10),
+  cap: new THREE.SphereGeometry(.17, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), blade: new THREE.BoxGeometry(.04, .75, .07),
+  blob: new THREE.CircleGeometry(.36, 18), ring: new THREE.RingGeometry(.36, .44, 28), crystal: new THREE.ConeGeometry(.07, .32, 5),
+  cube: new THREE.BoxGeometry(1, 1, 1), cyl: new THREE.CylinderGeometry(.5, .5, 1, 14), sph: new THREE.SphereGeometry(.5, 14, 10), cone: new THREE.ConeGeometry(.5, 1, 10),
+  hl: new THREE.PlaneGeometry(.92, .92)
+};
+const blobMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: .45, depthWrite: false });
+
+/* ================= UI helpers ================= */
+const ui = { busy: 0, sense: false };
+const logEl = $('#log');
+function log(t) { const d = document.createElement('div'); d.textContent = t; logEl.appendChild(d); while (logEl.children.length > 3) logEl.firstChild.remove(); }
+function hint(t) { $('#hint').textContent = t || ''; }
+let locT = 0;
+function setLoc(t) { const el = $('#loc'); el.textContent = t || ''; el.style.opacity = 1; clearTimeout(locT); locT = setTimeout(() => el.style.opacity = 0, 3800); }
+const tagsEl = $('#tags');
+const tmpV = new THREE.Vector3();
+function toScreen(x, y, h) { tmpV.set(x, h, y).project(camera); return { x: (tmpV.x + 1) / 2 * window.innerWidth, y: (1 - tmpV.y) / 2 * window.innerHeight, vis: tmpV.z < 1 }; }
+function floatText(u, text, color) {
+  const el = document.createElement('div'); el.className = 'fx'; el.textContent = text; el.style.color = color || '#fff';
+  const p = toScreen(u.px, u.pz, 1.7 * (u.scale || 1)); el.style.left = p.x + 'px'; el.style.top = p.y + 'px';
+  tagsEl.appendChild(el); setTimeout(() => el.remove(), 1150);
+}
+const bubbles = [];
+function bark(u, text, ms = 3400) {
+  if (!u || !u.alive) return;
+  const el = document.createElement('div'); el.className = 'bubble'; el.innerHTML = '<b>' + u.name + ':</b> ' + text;
+  tagsEl.appendChild(el); const b = { u, el, until: performance.now() + ms }; bubbles.push(b);
+}
+async function barks(list, gap = 1500) { for (const [id, t] of list) { const u = unitById(id); if (u && u.alive) { bark(u, t); await sleep(gap); } } }
+
+function dialog(lines) { // [['Имя','текст'], ...]
+  return new Promise(res => {
+    ui.busy++; const d = $('#dlg'); let i = 0;
+    const show = () => { const [n, t] = lines[i]; $('#dName').textContent = n || ''; $('#dText').innerHTML = t; $('#dCh').innerHTML = ''; $('#dTap').hidden = false; };
+    const next = e => { e.stopPropagation(); i++; if (i >= lines.length) { d.hidden = true; d.onclick = null; ui.busy--; res(); } else show(); };
+    d.hidden = false; show(); d.onclick = next;
+  });
+}
+function choose(name, text, opts) { // opts: [label, sublabel?, disabled?]
+  return new Promise(res => {
+    ui.busy++; const d = $('#dlg'); d.hidden = false; d.onclick = null;
+    $('#dName').textContent = name || ''; $('#dText').innerHTML = text || ''; $('#dTap').hidden = true;
+    const ch = $('#dCh'); ch.innerHTML = '';
+    opts.forEach((o, i) => { const b = document.createElement('button'); b.innerHTML = o[0] + (o[1] ? '<br><small>' + o[1] + '</small>' : ''); if (o[2]) b.disabled = true;
+      b.onclick = e => { e.stopPropagation(); d.hidden = true; ch.innerHTML = ''; ui.busy--; res(i); }; ch.appendChild(b); });
+  });
+}
+function sys(lines, btn = 'Принять') {
+  return new Promise(res => {
+    ui.busy++; const s = $('#sys'), box = $('#sysBox'); box.innerHTML = '';
+    lines.forEach(l => { const d = document.createElement('div'); if (l.startsWith('!')) { d.className = 'gl'; l = l.slice(1); } d.textContent = l; box.appendChild(d); });
+    const b = document.createElement('button'); b.textContent = btn; box.appendChild(b); s.hidden = false;
+    b.onclick = () => { s.hidden = true; ui.busy--; res(); }; b.focus();
+  });
+}
+async function fade(on) { $('#fade').classList.toggle('on', on); await sleep(650); }
+
+function updateHUD() {
+  const s = shin(); if (!s) return;
+  $('#hpb').style.width = (100 * s.hp / s.maxHp) + '%'; $('#hpt').textContent = s.hp + ' / ' + s.maxHp;
+  $('#enb').style.width = (100 * G.en / 14) + '%'; $('#ent').textContent = G.en + ' / 14';
+  const q = $('#quen'); q.innerHTML = 'Квен'; for (let i = 0; i < 2; i++) { const sp = document.createElement('span'); if (i < s.quen) sp.className = 'on'; q.appendChild(sp); }
+  const fx = []; if (s.st.grom) fx.push('Гром'); if (s.st.petri) fx.push('Петри'); if (s.st.ney) fx.push('Неясыть'); if (G.flags.oilOn) fx.push('Масло'); if (s.st.stun) fx.push('Скован');
+  if (fx.length) { const t = document.createElement('span'); t.style.cssText = 'transform:none;border:0;width:auto;height:auto;margin-left:6px;color:var(--gold)'; t.textContent = fx.join(' · '); q.appendChild(t); }
+}
+
+/* ================= LEVEL DATA ================= */
+const NAMES = { ren: 'Рэн', li: 'Ли Сюэ', ragna: 'Рагна', yon: 'Йон' };
+function bridgeRows() {
+  const w = 30, rows = [];
+  rows.push('%'.repeat(w));
+  let a = '%@.', b = '%..';
+  for (let x = 3; x <= 24; x++) { a += (x % 4 === 3) ? '-' : '='; b += (x % 4 === 1) ? '-' : '='; }
+  a += '..X%'; b += '...%';
+  rows.push('%'.repeat(w)); rows.push(a); rows.push(b); rows.push('%'.repeat(w)); rows.push('%'.repeat(w));
+  return rows;
+}
+function arenaRows() {
+  const w = 23, h = 22, cx = 11, cy = 10, rows = [];
+  for (let y = 0; y < h; y++) { let r = ''; for (let x = 0; x < w; x++) {
+    const d = Math.hypot(x - cx, y - cy); let c = '#';
+    if (d <= 7.4) c = ',';
+    if (d <= 1.5) c = '.';
+    if (x === cx && y > cy + 7 && y <= 20) c = '.';
+    if (y === cy && x >= 1 && x < cx - 6) c = '.';
+    r += c; } rows.push(r.split('')); }
+  const put = (x, y, c) => rows[y][x] = c;
+  [[11, 5], [16, 10], [11, 15], [6, 10]].forEach(([x, y]) => { put(x, y, 'U'); [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx, dy]) => { if (rows[y+dy][x+dx] === ',') put(x+dx, y+dy, '.'); }); });
+  put(11, 10, 'B'); put(18, 10, 'H'); put(11, 19, '@'); put(1, 10, 'E'); put(11, 2, 'I'); put(13, 3, 'L');
+  return rows.map(r => r.join(''));
+}
+
+const LEVELS = [
+  { id: 'l0', ch: 1, name: 'Штольня каторжан', party: true, theme: 'salt',
+    rows: [
+      '##############################',
+      '###########,,,,,,,L###########',
+      '###########,,#################',
+      '###########,,#################',
+      '###########,,#################',
+      '#....k.......a################',
+      '#@...........................#',
+      '#...........,...........,....#',
+      '#####.####.....#####.....#####',
+      '#####,####.#########.#########',
+      '##########.###.....#.c.c.c####',
+      '##########.....c.c.......m.###',
+      '###############.c...c.......X#',
+      '##############################'],
+    under: { c: '.', m: '.', k: '.', a: '.', L: ',' } },
+  { id: 'l1', ch: 1, name: 'Часовня', party: true, theme: 'salt',
+    rows: [
+      '######################',
+      '##########R###########',
+      '#####.............####',
+      '#####.,,,,123,,,,.####',
+      '#####.,,,,,A,,,,,.####',
+      '#####.,,,bb,bb,,,.####',
+      '#####.,,m,,,,,,m,.####',
+      '#@....,,,,,,,,,,,.####',
+      '#####.,,,,m,,,,,,.....X',
+      '#####.,,,,,,,,m,,.####',
+      '#####.............####',
+      '######################'],
+    under: { m: ',', b: ',', R: '.' } },
+  { id: 'l2', ch: 1, name: 'Рассольный горизонт', party: true, theme: 'salt',
+    rows: [
+      '#########################',
+      '##########.K.############',
+      '####~~~~~~W..~~~~~~~#####',
+      '####~~~~~~~~~~~~~~~~#####',
+      '#@..~~~~~~~~~~~~~~~~~####',
+      '#...~~d~~~~~~~~~~d~~~~###',
+      '#...~~~~~~..~~~~~~~~~~~..X',
+      '####~~~~~~..~~~~M~~C~~~##',
+      '####~~~~d~~~~~~~~~~~d~###',
+      '####~~~~~~~~~~~~~~~~~~###',
+      '#########################'],
+    under: { d: '~', M: '~', C: '.' } },
+  { id: 'l3', ch: 1, name: 'Варница', party: true, theme: 'salt', rows: arenaRows(), under: { B: '.', H: ',', E: '.', I: ',', L: ',' } },
+  { id: 'l4', ch: 1, name: 'Устье. Ночь', party: false, theme: 'night',
+    rows: [
+      '##################',
+      '#######....#######',
+      '#................#',
+      '#..N.....9.......#',
+      '#........@.......#',
+      '#..5...6...7..8..#',
+      '#................#',
+      '#D...............#',
+      '##################'] },
+  { id: 'l5', ch: 2, name: 'Арка Рогов', party: false, theme: 'path',
+    rows: [
+      '%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%',
+      '%%%%%%%%%%%%%%%%++++++++++%%%%%',
+      '%%%%%%%%%%%%%%%++%%%%%%%%%%%%%%',
+      '%@...h.......++%%%%%%%%%%%%%%%%',
+      '%....h.........%%%%%%%%%%%%%%%%',
+      '%%%%%%%%%%%%%%..%%%%%%%%%%%%%%%',
+      '%%%%%%%%%%%%%%%.....h.....hh.X%',
+      '%%%%%%%%%%%%%%%....h.........%%',
+      '%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'] },
+  { id: 'l6', ch: 2, name: 'Колонна', party: false, theme: 'path',
+    rows: [
+      '%%%%%%%%%%%%%%%%%%%%%%%%%%%%%',
+      '%%SSSSSSSSSSSSSSSSSSSSSS%%%%%',
+      '%@.......r....r.......r..R.X%',
+      '%.........................%%%',
+      '%%SSSSSSSSSSSSSSSSSSSSSST%%%%',
+      '%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'] },
+  { id: 'l7', ch: 2, name: 'Мост Копыт', party: false, theme: 'path', rows: bridgeRows(), extra: [['q', 14, 2]] },
+  { id: 'l8', ch: 2, name: 'Ясли', party: false, theme: 'path',
+    rows: [
+      '%%%%%%%%%%%%%%%%%%%',
+      '%%%%%%P%%%Q%%%%%%%%',
+      '%@......Y...g..R.X%',
+      '%...........g.....%',
+      '%%%%%%%%%%%%%%%%%%%'] },
+  { id: 'l9', ch: 2, name: 'Брод Стремянного', party: false, theme: 'path',
+    rows: [
+      '%%%%%%%%%%%%%%%%%%%%%%',
+      '%%%%%%%%%%%%%%%%%%%%%%',
+      '%.F.............%%%%%%',
+      '%...............%%%%%%',
+      '%...............%%%%%%',
+      '%@.........B.....%%Z%%',
+      '%...............%%%%%%',
+      '%...............%%%%%%',
+      '%%%%%%%%%%%%%%%%%%%%%%'] }
+];
+
+/* ================= RUNTIME ================= */
+let L = null, C = null;
+const units = [];
+function shin() { return units.find(u => u.id === 'shin'); }
+function unitById(id) { return units.find(u => u.id === id); }
+function tile(x, y) { if (!L || y < 0 || y >= L.h || x < 0 || x >= L.w) return '#'; return L.g[y][x]; }
+function isPathTile(c) { return c === '.' || c === ',' || c === '~' || c === '+' || c === '=' || c === '-'; }
+function objAt(x, y) { return L.objects.find(o => o.x === x && o.y === y && !o.gone); }
+function unitAt(x, y, except) { return units.find(u => u.alive && u !== except && u.x === x && u.y === y && !u.hiddenUnit); }
+function walkable(x, y, forUnit) {
+  const c = tile(x, y); if (!isPathTile(c)) return false;
+  const o = objAt(x, y); if (o && o.block) return false;
+  return true;
+}
+function stepCost(x, y, u) {
+  const c = tile(x, y); let k = 1;
+  if (c === '~' && !(u && u.aquatic)) k = 2;
+  if (u && u.team === 'party' && u.id !== 'shin' && L.def.theme === 'salt' && c === ',' && !L.calm) k += 3;
+  return k;
+}
+const DIRS = [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
+function canDiag(x, y, dx, dy) { return !dx || !dy || (walkable(x + dx, y) && walkable(x, y + dy)); }
+function astar(u, gx, gy, opts = {}) {
+  const sx = u.x, sy = u.y; if (sx === gx && sy === gy) return [];
+  const open = [{ x: sx, y: sy, g: 0, f: 0 }], came = {}, gs = { [K(sx, sy)]: 0 }, closed = new Set();
+  let n = 0;
+  while (open.length && n++ < 4000) {
+    let bi = 0; for (let i = 1; i < open.length; i++) if (open[i].f < open[bi].f) bi = i;
+    const cur = open.splice(bi, 1)[0]; const ck = K(cur.x, cur.y);
+    if (cur.x === gx && cur.y === gy) { const p = []; let k = ck; while (came[k]) { const [x, y] = k.split(',').map(Number); p.unshift({ x, y }); k = came[k]; } return p; }
+    if (closed.has(ck)) continue; closed.add(ck);
+    for (const [dx, dy] of DIRS) {
+      const nx = cur.x + dx, ny = cur.y + dy; const nk = K(nx, ny);
+      const isGoal = nx === gx && ny === gy;
+      if (!walkable(nx, ny, u) && !(isGoal && opts.goalBlocked)) continue;
+      if (!canDiag(cur.x, cur.y, dx, dy)) continue;
+      if (!isGoal || !opts.goalBlocked) { const o = unitAt(nx, ny, u); if (o && !(opts.passAllies && o.team === u.team)) continue; }
+      const g = cur.g + stepCost(nx, ny, u) * (dx && dy ? 1.41 : 1);
+      if (gs[nk] === undefined || g < gs[nk]) { gs[nk] = g; came[nk] = ck; open.push({ x: nx, y: ny, g, f: g + Math.hypot(gx - nx, gy - ny) }); }
+    }
+  }
+  return null;
+}
+function reachable(u, budget) { // dijkstra; returns map key -> {cost, prev}
+  const res = new Map(); res.set(K(u.x, u.y), { c: 0, p: null, x: u.x, y: u.y });
+  const q = [{ x: u.x, y: u.y, c: 0 }];
+  while (q.length) {
+    let bi = 0; for (let i = 1; i < q.length; i++) if (q[i].c < q[bi].c) bi = i;
+    const cur = q.splice(bi, 1)[0];
+    for (const [dx, dy] of DIRS) {
+      const nx = cur.x + dx, ny = cur.y + dy;
+      if (!walkable(nx, ny, u) || !canDiag(cur.x, cur.y, dx, dy) || unitAt(nx, ny, u)) continue;
+      const c = cur.c + stepCost(nx, ny, u) * (dx && dy ? 1.41 : 1);
+      if (c > budget + 1e-6) continue;
+      const k = K(nx, ny); const ex = res.get(k);
+      if (!ex || c < ex.c) { res.set(k, { c, p: K(cur.x, cur.y), x: nx, y: ny }); q.push({ x: nx, y: ny, c }); }
+    }
+  }
+  return res;
+}
+function pathFromReach(map, x, y) { const p = []; let k = K(x, y); while (k) { const e = map.get(k); if (!e || !e.p) break; p.unshift({ x: e.x, y: e.y }); k = e.p; } return p; }
+
+/* ---------- unit factory ---------- */
+const PROTOS = {
+  shin: { name: 'Шин', team: 'party', hp: 39, def: 12, armor: 2, acc: 12, dmg: 7, strikes: 2, speed: 6, look: { body: 0x2b2a2c, head: 0xd9b99a, hair: 0x9a9a98, cloak: 0x3a3f46, swords: 2 } },
+  ren: { name: 'Рэн', team: 'party', hp: 70, def: 13, armor: 3, acc: 17, dmg: 12, strikes: 1, speed: 5, look: { body: 0x2c3e66, head: 0xe5c3a2, hair: 0x111111, glow: 0xffd77a } },
+  li: { name: 'Ли Сюэ', team: 'party', hp: 40, def: 12, armor: 1, acc: 17, dmg: 8, strikes: 1, speed: 5, range: 8, look: { body: 0x5c6b4f, head: 0xe8c9a8, hair: 0x15110f, bow: 1 } },
+  ragna: { name: 'Рагна', team: 'party', hp: 45, def: 11, armor: 2, acc: 13, dmg: 10, strikes: 1, speed: 5, look: { body: 0x6a4a2e, head: 0xe9c6a5, hair: 0xd8c27a, axe: 1 } },
+  yon: { name: 'Йон', team: 'party', hp: 40, def: 11, armor: 3, acc: 11, dmg: 5, strikes: 1, speed: 4, look: { body: 0x5b5a57, head: 0xdcb595, hair: 0x5a4636, shield: 1 } },
+  convict: { name: 'Каторжанин', team: 'enemy', hp: 12, def: 7, armor: 0, acc: 9, dmg: 4, speed: 4, rank: true, xp: 8, look: { body: 0xd9d3c2, head: 0xe7e1d2, chain: 1 } },
+  miner: { name: 'Слепой шахтёр', team: 'enemy', hp: 20, def: 8, armor: 1, acc: 10, dmg: 6, speed: 4, rank: true, blind: true, xp: 14, look: { body: 0xeeeae0, head: 0xf5f2ea, pick: 1 }, scale: 1.1 },
+  brother: { name: 'Мёртвый брат', team: 'enemy', hp: 26, def: 8, armor: 2, acc: 10, dmg: 5, speed: 3, rank: true, xp: 14, look: { body: 0x1b1b1d, head: 0xe9e6dc, flame: 1 } },
+  drowned: { name: 'Рассольный утопец', team: 'enemy', hp: 16, def: 9, armor: 0, acc: 10, dmg: 5, speed: 4, rank: true, aquatic: true, xp: 12, look: { body: 0x3e5b5c, head: 0x7f9a95 } },
+  antip: { name: 'Колодник Антип', team: 'enemy', hp: 120, def: 9, armor: 3, acc: 11, dmg: 7, speed: 2, aquatic: true, elite: true, xp: 80, look: { body: 0xcfc8b6, head: 0xddd6c6, chain: 1 }, scale: 1.7 },
+  solevar: { name: 'Солевар', team: 'enemy', hp: 240, def: 10, armor: 3, acc: 12, dmg: 8, speed: 2, boss: true, xp: 0, look: { body: 0xe9e2cf, head: 0xf0ebdc, pick: 1, chain: 1 }, scale: 2.3 },
+  hound: { name: 'Гончая тропы', team: 'enemy', hp: 12, def: 6, armor: 0, acc: 9, dmg: 0, speed: 6, rank: true, xp: 8, hound: true, look: { hound: 1 } },
+  driver: { name: 'Погонщик', team: 'enemy', hp: 22, def: 8, armor: 2, acc: 10, dmg: 6, speed: 4, rank: true, xp: 14, range: 2, look: { body: 0x3a4250, head: 0xf4f6f8, cloak: 0x252a33 } },
+  mirror: { name: 'Отражение', team: 'enemy', hp: 40, def: 9, armor: 0, acc: 12, dmg: 6, speed: 6, elite: true, xp: 60, look: { body: 0xcfe2f2, head: 0xe6f1fa, hair: 0xe6f1fa, swords: 2, ghost: 1 } },
+  strem: { name: 'Стремянный', team: 'enemy', hp: 75, def: 10, armor: 4, acc: 13, dmg: 8, speed: 5, boss: true, xp: 0, look: { rider: 1 }, scale: 1.6 },
+  horse: { name: 'Конь без тени', team: 'enemy', hp: 20, def: 8, armor: 1, acc: 12, dmg: 6, speed: 5, elite: true, xp: 20, look: { hound: 1, horse: 1 }, scale: 1.6 },
+  npc: { name: '', team: 'neutral', hp: 10, def: 5, armor: 0, acc: 0, dmg: 0, speed: 3, look: { body: 0x444444, head: 0xd9b99a } }
+};
+let uid = 0;
+function makeUnit(kind, x, y, over = {}) {
+  const p = PROTOS[kind];
+  const u = Object.assign({ id: kind + (uid++), kind, x, y, px: x, pz: y, alive: true, down: false, st: {}, quen: 0, queue: [], strikes: 1, range: 1, scale: 1 }, JSON.parse(JSON.stringify(p)), over);
+  u.maxHp = over.maxHp || p.hp; if (over.hp === undefined) u.hp = u.maxHp;
+  u.mesh = buildFigure(u);
+  u.mesh.position.set(x, 0, y); L.group.add(u.mesh);
+  const tag = document.createElement('div'); tag.className = 'tag' + (u.team === 'party' ? ' p' : ''); tag.innerHTML = '<span class="nm"></span><div class="hb"><i></i></div><span class="st"></span>'; tagsEl.appendChild(tag); u.tag = tag; u.tag.hidden = true;
+  units.push(u); return u;
+}
+function buildFigure(u) {
+  const g = new THREE.Group(); const lk = u.look || {}; const s = u.scale || 1;
+  const blob = new THREE.Mesh(GEO.blob, blobMat); blob.rotation.x = -Math.PI / 2; blob.position.y = .07; blob.scale.setScalar(s); g.add(blob);
+  const ring = new THREE.Mesh(GEO.ring, new THREE.MeshBasicMaterial({ color: u.team === 'party' ? 0x7fa7c9 : u.team === 'enemy' ? 0xc0493a : 0xc9a35a, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide }));
+  ring.rotation.x = -Math.PI / 2; ring.position.y = .08; ring.scale.setScalar(s); g.add(ring); g.userData.ring = ring;
+  const inner = new THREE.Group(); inner.scale.setScalar(s); g.add(inner); g.userData.inner = inner;
+  const ghost = lk.ghost ? { transparent: true, opacity: .55, emissive: 0x6688aa, emissiveIntensity: .6 } : {};
+  if (lk.hound) {
+    const bodyM = mat(lk.horse ? 0x2a2f37 : 0xcdd9e6, lk.horse ? {} : { emissive: 0x334455, emissiveIntensity: .5 });
+    const b = new THREE.Mesh(GEO.cube, bodyM); b.scale.set(.32, .3, .7); b.position.y = .45; inner.add(b);
+    const h = new THREE.Mesh(GEO.cube, bodyM); h.scale.set(.22, .22, .3); h.position.set(0, .62, .42); inner.add(h);
+    for (const [lx, lz] of [[.11, .25], [-.11, .25], [.11, -.25], [-.11, -.25]]) { const l = new THREE.Mesh(GEO.cyl, bodyM); l.scale.set(.07, .32, .07); l.position.set(lx, .16, lz); inner.add(l); }
+    return g;
+  }
+  if (lk.rider) {
+    const hm = mat(0x23282f); const b = new THREE.Mesh(GEO.cube, hm); b.scale.set(.4, .42, .95); b.position.y = .6; inner.add(b);
+    for (const [lx, lz] of [[.15, .35], [-.15, .35], [.15, -.35], [-.15, -.35]]) { const l = new THREE.Mesh(GEO.cyl, hm); l.scale.set(.09, .45, .09); l.position.set(lx, .22, lz); inner.add(l); }
+    const nk = new THREE.Mesh(GEO.cube, hm); nk.scale.set(.2, .4, .22); nk.position.set(0, .95, .45); nk.rotation.x = -.5; inner.add(nk);
+    const r = new THREE.Mesh(GEO.body, mat(0x5d6a78, { metalness: .6, roughness: .4 })); r.position.set(0, 1.15, -.05); inner.add(r);
+    const hd = new THREE.Mesh(GEO.head, mat(0xd8e4ee)); hd.position.set(0, 1.62, -.05); inner.add(hd);
+    const gl = new THREE.Mesh(GEO.blade, mat(0xcfe8ff, { emissive: 0x6fa8dc, emissiveIntensity: .8 })); gl.scale.set(1, 2.6, 1); gl.position.set(.28, 1.3, .1); inner.add(gl);
+    return g;
+  }
+  const body = new THREE.Mesh(GEO.body, mat(lk.body || 0x444444, ghost)); body.position.y = .5; inner.add(body);
+  const head = new THREE.Mesh(GEO.head, mat(lk.head || 0xd9b99a, ghost)); head.position.y = 1.03; inner.add(head);
+  if (lk.hair !== undefined) { const hair = new THREE.Mesh(GEO.cap, mat(lk.hair, ghost)); hair.position.y = 1.06; inner.add(hair); }
+  if (lk.cloak) { const c = new THREE.Mesh(GEO.cone, mat(lk.cloak, ghost)); c.scale.set(.6, .7, .45); c.position.set(0, .55, -.08); inner.add(c); }
+  if (lk.swords) for (const sx of [-.08, .08]) { const s2 = new THREE.Mesh(GEO.blade, mat(sx < 0 ? 0x9aa3ad : 0xd7dde3, { metalness: .8, roughness: .3 })); s2.position.set(sx, .82, -.2); s2.rotation.z = sx < 0 ? .5 : -.5; inner.add(s2); }
+  if (lk.glow) { const s2 = new THREE.Mesh(GEO.blade, mat(0xfff1c2, { emissive: lk.glow, emissiveIntensity: 1.4 })); s2.position.set(.26, .55, .1); s2.rotation.z = -.3; inner.add(s2); }
+  if (lk.bow) { const bw = new THREE.Mesh(new THREE.TorusGeometry(.32, .02, 6, 16, Math.PI), mat(0xbfa66a, { emissive: 0x6f8f5a, emissiveIntensity: .4 })); bw.position.set(.22, .6, 0); bw.rotation.z = Math.PI / 2; inner.add(bw); }
+  if (lk.axe) { const a = new THREE.Mesh(GEO.cube, mat(0x8c8f93, { metalness: .7 })); a.scale.set(.05, .6, .05); a.position.set(.26, .55, .05); inner.add(a); const hd = new THREE.Mesh(GEO.cube, mat(0xa9adb2, { metalness: .8 })); hd.scale.set(.05, .18, .2); hd.position.set(.26, .82, .12); inner.add(hd); }
+  if (lk.shield) { const sh = new THREE.Mesh(GEO.cyl, mat(0x6b5236)); sh.scale.set(.42, .05, .42); sh.rotation.z = Math.PI / 2; sh.position.set(-.26, .55, .05); inner.add(sh); }
+  if (lk.pick) { const p = new THREE.Mesh(GEO.cube, mat(0x6d665c)); p.scale.set(.05, .7, .05); p.position.set(.27, .55, .05); inner.add(p); const ph = new THREE.Mesh(GEO.cube, mat(0x8b8780)); ph.scale.set(.32, .06, .06); ph.position.set(.27, .88, .05); inner.add(ph); }
+  if (lk.chain) { const ch = new THREE.Mesh(new THREE.TorusGeometry(.22, .03, 6, 16), mat(0x6e6a63, { metalness: .6 })); ch.position.y = .55; ch.rotation.x = Math.PI / 2; inner.add(ch); }
+  if (lk.flame) { const f = new THREE.Mesh(GEO.cone, mat(0xc0402c, { emissive: 0x802010, emissiveIntensity: .6 })); f.scale.set(.18, .22, .05); f.position.set(0, .7, .2); inner.add(f); }
+  return g;
+}
+function killUnit(u) {
+  u.alive = false; u.queue = [];
+  const m = u.mesh; let t = 0; const iv = setInterval(() => { t += .08; m.userData.inner.rotation.z = Math.min(1.45, t * 1.6); m.userData.inner.position.y = -t * .1; if (t > 1) { clearInterval(iv); if (u.team !== 'party') m.visible = false; } }, 16);
+  u.tag.hidden = true;
+}
+
+/* ---------- level build ---------- */
+function clearLevel() {
+  if (L) { scene.remove(L.group); L.group.traverse(o => { if (o.geometry && !Object.values(GEO).includes(o.geometry)) o.geometry.dispose(); }); }
+  units.forEach(u => u.tag.remove()); units.length = 0; tagsEl.innerHTML = ''; bubbles.length = 0;
+}
+function buildLevel(idx) {
+  clearLevel();
+  const def = LEVELS[idx];
+  const rows = def.rows; const w = Math.max(...rows.map(r => r.length)), h = rows.length;
+  const pad = def.theme === 'path' ? '%' : '#';
+  L = { def, idx, w, h, g: [], objects: [], triggers: [], group: new THREE.Group(), calm: false, hl: [], marks: [] };
+  scene.add(L.group);
+  const spawns = [];
+  for (let y = 0; y < h; y++) { const r = (rows[y] + pad.repeat(w)).slice(0, w).split(''); L.g.push(r);
+    for (let x = 0; x < w; x++) { const c = r[x]; if (!'#.,~%+=-'.includes(c)) { spawns.push([c, x, y]); r[x] = (def.under && def.under[c]) || '.'; } } }
+  (def.extra || []).forEach(e => spawns.push(e));
+  // theme
+  const T = def.theme;
+  scene.background = new THREE.Color(T === 'path' ? 0x05070c : T === 'night' ? 0x07090c : 0x0b0c0d);
+  scene.fog = new THREE.Fog(scene.background, 16, 34);
+  amb.intensity = T === 'path' ? .55 : .7; amb.color.set(T === 'path' ? 0x41506a : 0x56606a);
+  torch.intensity = T === 'salt' ? 1.6 : T === 'night' ? 1.2 : 0; aura.intensity = T === 'path' ? 1.1 : 0;
+  drawTiles();
+  // units & objects
+  const s0 = spawns.find(s => s[0] === '@');
+  const sx = s0 ? s0[1] : 1, sy = s0 ? s0[2] : 1;
+  if (G.hp <= 0) G.hp = 20;
+  const S = makeUnit('shin', sx, sy, { id: 'shin', hp: G.hp, maxHp: 39 }); S.quen = G.quen;
+  if (def.party) {
+    const ids = ['yon', 'li', 'ragna', 'ren']; const around = freeAround(sx, sy, 4);
+    ids.forEach((id, i) => { const a = around[i]; if (!a) return; if (G.allies[id] <= 0) G.allies[id] = 1; makeUnit(id, a.x, a.y, { id, hp: G.allies[id] }); });
+  }
+  for (const [c, x, y] of spawns) spawnThing(c, x, y);
+  computeFlow(); buildParticles(); refreshSense();
+  camFocus.set(sx, 0, sy); camPan.set(0, 0, 0);
+  setLoc((def.ch === 1 ? 'Соляной склеп · ' : 'Глава II · ') + def.name);
+}
+function freeAround(x, y, n) {
+  const out = []; for (let r = 1; r <= 3 && out.length < n; r++) for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
+    if (out.length >= n) break; const nx = x + dx, ny = y + dy; if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+    if (walkable(nx, ny) && !unitAt(nx, ny) && !out.some(o => o.x === nx && o.y === ny) && tile(nx, ny) !== '~') out.push({ x: nx, y: ny }); }
+  return out;
+}
+let tileMeshes = [];
+function drawTiles() {
+  const T = L.def.theme; const floors = [], walls = [], crystals = [];
+  for (let y = 0; y < L.h; y++) for (let x = 0; x < L.w; x++) {
+    const c = L.g[y][x];
+    if (isPathTile(c)) floors.push([x, y, c]);
+    else if (c === '#') { let near = false; for (const [dx, dy] of DIRS) if (isPathTile(tile(x + dx, y + dy))) near = true; if (near) walls.push([x, y]); }
+    if (c === ',') crystals.push([x, y]);
+  }
+  const fm = new THREE.InstancedMesh(GEO.tile, new THREE.MeshStandardMaterial({ roughness: .9, metalness: 0, emissive: T === 'path' ? 0x16283a : 0x000000, emissiveIntensity: T === 'path' ? .55 : 0 }), Math.max(1, floors.length));
+  const m4 = new THREE.Matrix4(), col = new THREE.Color();
+  floors.forEach(([x, y, c], i) => {
+    let yy = 0;
+    if (c === '~') yy = -.12;
+    m4.makeTranslation(x, yy - .05, y); fm.setMatrixAt(i, m4);
+    let hex = 0xa39b8a;
+    if (T === 'night') hex = 0x4c4a44;
+    if (c === ',') hex = 0x9c9483;
+    if (c === '~') hex = 0x16262b;
+    if (T === 'path') hex = c === '+' ? 0xa9c6e2 : c === '-' ? 0x5d7286 : 0x6c8499;
+    col.setHex(hex); col.offsetHSL(0, 0, (((x * 7 + y * 13) % 5) - 2) * .012); fm.setColorAt(i, col);
+  });
+  fm.instanceMatrix.needsUpdate = true; if (fm.instanceColor) fm.instanceColor.needsUpdate = true;
+  L.group.add(fm); L.floorMesh = fm; L.floorList = floors;
+  if (walls.length) {
+    const wm = new THREE.InstancedMesh(GEO.wall, mat(T === 'night' ? 0x2b2a28 : 0x4d4740), walls.length);
+    walls.forEach(([x, y], i) => { m4.makeTranslation(x, .55, y); wm.setMatrixAt(i, m4); col.setHex(T === 'night' ? 0x2b2a28 : 0x4d4740); col.offsetHSL(0, 0, ((x * 3 + y * 5) % 4) * .02); wm.setColorAt(i, col); });
+    wm.instanceMatrix.needsUpdate = true; if (wm.instanceColor) wm.instanceColor.needsUpdate = true; L.group.add(wm);
+  }
+  if (crystals.length) {
+    const cm = new THREE.InstancedMesh(GEO.crystal, mat(0xf4efe2, { emissive: 0x332e26, emissiveIntensity: .4 }), crystals.length * 3);
+    let k = 0; crystals.forEach(([x, y]) => { for (let j = 0; j < 3; j++) { const ox = ((x * 31 + y * 17 + j * 11) % 9) / 10 - .4, oz = ((x * 13 + y * 29 + j * 7) % 9) / 10 - .4; const q = new THREE.Quaternion().setFromEuler(new THREE.Euler(ox * .6, 0, oz * .6)); m4.compose(new THREE.Vector3(x + ox, .12, y + oz), q, new THREE.Vector3(1, .7 + j * .25, 1)); cm.setMatrixAt(k++, m4); } });
+    cm.instanceMatrix.needsUpdate = true; L.group.add(cm); L.crystalMesh = cm;
+  }
+  if (T === 'path') { // hoof decals on '='
+    floors.filter(f => f[2] === '=').forEach(([x, y]) => { const r = new THREE.Mesh(new THREE.TorusGeometry(.16, .035, 6, 14, Math.PI * 1.4), new THREE.MeshBasicMaterial({ color: 0x2c4a63 })); r.rotation.x = -Math.PI / 2; r.position.set(x, .02, y); L.group.add(r); L.marks.push(r); });
+  }
+}
+function setTile(x, y, c) { L.g[y][x] = c; }
+function rebuildTiles() { L.group.children.filter(o => o.isInstancedMesh).forEach(o => L.group.remove(o)); L.marks.forEach(m => L.group.remove(m)); L.marks = []; drawTiles(); computeFlow(); refreshSense(); }
+
+/* ---------- objects ---------- */
+function addObj(o) { o.mesh && L.group.add(o.mesh); L.objects.push(o); return o; }
+function propMesh(kind) {
+  const g = new THREE.Group(); const add = (geo, m, sx, sy, sz, px, py, pz, rx = 0, ry = 0) => { const me = new THREE.Mesh(geo, m); me.scale.set(sx, sy, sz); me.position.set(px, py, pz); me.rotation.set(rx, ry, 0); g.add(me); return me; };
+  switch (kind) {
+    case 'altar': add(GEO.cube, mat(0xe5dccb), .9, .7, .6, 0, .35, 0); for (let i = -1; i <= 1; i++) { add(GEO.cyl, mat(0xf1e6c8), .06, .18, .06, i * .25, .79, 0); add(GEO.cone, mat(0xffcf73, { emissive: 0xff9c2a, emissiveIntensity: 1.3 }), .05, .1, .05, i * .25 + .02 * (2 - i), .93, 0, 0, 0); } break;
+    case 'damper': add(GEO.cube, mat(0x5a5248), .7, .9, .25, 0, .45, -.3); add(GEO.cube, mat(0x8a7f70, { metalness: .4 }), .5, .5, .06, 0, .5, -.15); break;
+    case 'body': add(GEO.cube, mat(0x1b1b1d), .3, .14, .8, 0, .09, 0); add(GEO.sph, mat(0xebe6d8), .24, .2, .24, 0, .14, .42); add(GEO.cube, mat(0xa8361f), .16, .02, .16, 0, .17, .05); break;
+    case 'corpse': add(GEO.cube, mat(0xdbd3c0), .3, .14, .7, 0, .08, 0); add(GEO.sph, mat(0xece6d6), .22, .2, .22, 0, .13, .38); break;
+    case 'sign': add(GEO.cube, mat(0x5a524a), .12, .9, .12, 0, .45, 0); add(GEO.cone, mat(0xc0402c, { emissive: 0x401008 }), .2, .3, .05, 0, .9, 0, 0, 0); break;
+    case 'loot': add(GEO.cube, mat(0x6a4a2e), .5, .35, .35, 0, .18, 0); add(GEO.cube, mat(0xc9a35a, { metalness: .6 }), .52, .06, .37, 0, .3, 0); break;
+    case 'rest': add(GEO.cyl, mat(0x3a3530), .5, .3, .5, 0, .15, 0); add(GEO.cone, mat(0xffb35a, { emissive: 0xff7a1a, emissiveIntensity: 1.2 }), .3, .45, .3, 0, .5, 0); break;
+    case 'restblue': add(GEO.cyl, mat(0x2a3440), .5, .3, .5, 0, .15, 0); add(GEO.cone, mat(0x9fd0ff, { emissive: 0x4f9fff, emissiveIntensity: 1.4 }), .3, .5, .3, 0, .5, 0); break;
+    case 'exit': add(GEO.cube, mat(0x2a2522), .9, 1.6, .2, 0, .8, 0); add(GEO.cube, mat(0x000000, { emissive: 0x401010, emissiveIntensity: .6 }), .7, 1.4, .1, 0, .75, .05); break;
+    case 'exitblue': add(GEO.cube, mat(0xbfe2ff, { transparent: true, opacity: .45, emissive: 0x6fb0ff, emissiveIntensity: .9 }), .9, 1.7, .12, 0, .85, 0); break;
+    case 'cage': add(GEO.cube, mat(0x3c3833, { metalness: .6, wireframe: true }), .9, 1.2, .9, 0, .9, 0); add(GEO.cyl, mat(0x6e6a63), .03, 1.6, .03, 0, 2.2, 0); break;
+    case 'winch': add(GEO.cyl, mat(0x5a4632), .25, .8, .25, 0, .4, 0, 0, 0); add(GEO.cube, mat(0x7a6040), .7, .1, .1, 0, .7, 0); add(GEO.sph, mat(0xe9e2cf), .35, .35, .35, .3, .25, .3); break;
+    case 'anchor': add(GEO.cube, mat(0x4f4a43), .6, .5, .6, 0, .25, 0); add(new THREE.TorusGeometry(.2, .05, 6, 14), mat(0x8a857d, { metalness: .7 }), 1, 1, 1, 0, .55, 0, Math.PI / 2); break;
+    case 'cauldron': add(GEO.cyl, mat(0x3a3632, { metalness: .5 }), .9, .6, .9, 0, .3, 0); add(GEO.cyl, mat(0xe8e2d2), .78, .05, .78, 0, .58, 0); break;
+    case 'hook': add(GEO.cyl, mat(0x5a524a), .12, 2.4, .12, 0, 1.2, 0); add(GEO.cube, mat(0x5a524a), .8, .1, .1, .35, 2.35, 0); break;
+    case 'plate': add(GEO.cube, mat(0xd8d0bd), 1, 1.4, .2, 0, .7, 0); break;
+    case 'statue': add(GEO.body, mat(0xcfe6f7, { transparent: true, opacity: .7, emissive: 0x2a4a66, emissiveIntensity: .6 }), 1, 1, 1, 0, .5, 0); add(GEO.head, mat(0xe0f0fb, { transparent: true, opacity: .75, emissive: 0x2a4a66, emissiveIntensity: .6 }), 1, 1, 1, 0, 1.03, 0); break;
+    case 'tur': add(GEO.body, mat(0x9fb6c8, { transparent: true, opacity: .8, emissive: 0x4a3a20, emissiveIntensity: .5 }), 1, 1, 1, 0, .5, 0); add(GEO.head, mat(0xcfd8de), 1, 1, 1, 0, 1.03, 0); add(GEO.sph, mat(0xb8a06a, { metalness: .8, emissive: 0x6a5020, emissiveIntensity: .7 }), .12, .12, .04, 0, .75, .2); break;
+    case 'icecage': add(GEO.cube, mat(0xbfe2ff, { transparent: true, opacity: .35, emissive: 0x3f78a8, emissiveIntensity: .7 }), .9, 1.3, .9, 0, .65, 0); break;
+    case 'lock': add(GEO.cube, mat(0x9fb6c8, { metalness: .8, emissive: 0x2a4a66, emissiveIntensity: .8 }), .4, .5, .2, 0, .5, 0); break;
+    case 'gate': add(GEO.cube, mat(0xbfe2ff, { transparent: true, opacity: .55, emissive: 0x3f78a8 }), .2, 1.3, .9, 0, .65, 0); break;
+    case 'brazier': add(GEO.cyl, mat(0x2a3440), .4, .5, .4, 0, .25, 0); add(GEO.cone, mat(0x9fd0ff, { emissive: 0x4f9fff, emissiveIntensity: 1.6 }), .35, .6, .35, 0, .75, 0); break;
+    case 'stone': add(GEO.cube, mat(0x9aa6b0), .6, 1.3, .3, 0, .65, 0); break;
+    case 'door': add(GEO.cube, mat(0x3b2f25), .9, 1.6, .15, 0, .8, 0); add(GEO.cube, mat(0x5a4632), 1.1, .12, .2, 0, 1.62, 0); break;
+  }
+  return g;
+}
+function makeProp(kind, x, y, o) { const m = propMesh(kind); m.position.set(x, 0, y); return addObj(Object.assign({ x, y, kind, mesh: m, block: true }, o)); }
+function npcUnit(id, name, x, y, look) { return makeUnit('npc', x, y, { id, name, look, team: 'neutral' }); }
+
+function spawnThing(c, x, y) {
+  const lv = L.def.id;
+  const E = (k, extra) => makeUnit(k, x, y, extra);
+  switch (c) {
+    case '@': break;
+    case 'c': E('convict', { group: 'g1' }); break;
+    case 'm': E('miner', { group: lv === 'l1' ? 'chapel' : 'g1' }); break;
+    case 'd': E('drowned', { group: 'brine' }); break;
+    case 'M': E('antip', { group: 'brine' }); break;
+    case 'h': E('hound', { group: x < 12 ? 'h1' : x < 24 ? 'h2' : 'h3' }); break;
+    case 'r': E('driver', { group: 'col' }); break;
+    case 'q': E('mirror', { group: 'bridge' }); break;
+    case 'B': if (lv === 'l3') E('solevar', { group: 'boss', id: 'boss' }); else E('strem', { group: 'boss', id: 'boss', hp: 75 + (G.flags.yasliBoth ? 10 : 0) + (G.flags.yasliNone ? 15 : 0), maxHp: 75 + (G.flags.yasliBoth ? 10 : 0) + (G.flags.yasliNone ? 15 : 0) }); break;
+    case 'k': makeProp('corpse', x, y, { block: false, name: 'Тело солекопа', act: corpseAct }); break;
+    case 'a': makeProp('sign', x, y, { block: false, name: 'Стрелка Ордена', act: async () => dialog([['', 'Нацарапанная мелом стрелка с огненным знаком Ордена. Указывает вверх, в боковую выработку.'], ['', '<em>Пламя факела у Йона клонится в другую сторону.</em>']]) }); break;
+    case 'L': makeProp('loot', x, y, { block: false, name: 'Тайник', act: lootAct }); break;
+    case 'X': makeProp(L.def.ch === 2 ? 'exitblue' : 'exit', x, y, { block: false, name: 'Проход дальше', exit: true, act: exitAct }); break;
+    case 'R': makeProp(L.def.ch === 2 ? 'restblue' : 'rest', x, y, { block: lv !== 'l1', name: L.def.ch === 2 ? 'Привал' : 'Ниша за алтарём', act: restAct }); break;
+    case 'A': makeProp('altar', x, y, { name: 'Соляной алтарь', act: altarAct }); break;
+    case '1': case '2': case '3': makeProp('damper', x, y, { name: 'Заслонка', n: +c, act: damperAct }); break;
+    case 'b': makeProp('body', x, y, { block: false, name: 'Брат Ордена', brother: true, act: brothersAct }); break;
+    case 'K': makeProp('cage', x, y, { name: 'Клеть', act: cageAct }); break;
+    case 'W': makeProp('winch', x, y, { name: 'Ворот', act: cageAct }); break;
+    case 'C': makeProp('anchor', x, y, { name: 'Крепление цепи', act: anchorAct }); break;
+    case 'U': makeProp('cauldron', x, y, { name: 'Чан', vent: true }); break;
+    case 'H': makeProp('hook', x, y, { name: 'Крюк', act: hookAct }); break;
+    case 'I': makeProp('plate', x, y, { name: 'Плита с именами', act: plateAct }); break;
+    case 'E': makeProp('exit', x, y, { block: false, name: 'Боковой проход' }); break;
+    case 'N': npcUnit('kassian', 'Приор Кассиан', x, y, { body: 0x161616, head: 0xd6b494, hair: 0xdedede, flame: 1 }); break;
+    case '5': if (G.allies.ren > 0) npcUnit('ren', 'Рэн', x, y, PROTOS.ren.look); break;
+    case '6': npcUnit('li', 'Ли Сюэ', x, y, PROTOS.li.look); break;
+    case '7': npcUnit('ragna', 'Рагна', x, y, PROTOS.ragna.look); break;
+    case '8': npcUnit('yon', 'Йон', x, y, PROTOS.yon.look); break;
+    case '9': if (G.flags.gervAlive) npcUnit('gerv', 'Гервазий', x, y, { body: 0x1b1b1d, head: 0xe9dfd2, hair: 0xb8b8b8, flame: 1 }); break;
+    case 'D': makeProp('door', x, y, { name: 'Порог старой сторожки', act: keyDoorAct }); break;
+    case 'S': makeProp('statue', x, y, { name: 'Ледяной оттиск' }); break;
+    case 'T': makeProp('tur', x, y, { name: 'Оттиск ведьмака', act: turAct }); break;
+    case 'P': makeProp('icecage', x, y, { name: 'Клеть: юный альв', act: yasliAct }); break;
+    case 'Q': makeProp('icecage', x, y, { name: 'Клеть: мальчик', act: yasliAct }); break;
+    case 'Y': makeProp('lock', x, y, { name: 'Замок «одного за одного»', act: yasliAct }); break;
+    case 'g': makeProp('gate', x, y, { name: 'Ледяные жерди', gate: true, act: yasliAct }); break;
+    case 'F': makeProp('brazier', x, y, { name: 'Жаровня' }); break;
+    case 'Z': makeProp('stone', x, y, { name: 'Межевой камень', act: stoneAct }); break;
+  }
+}
+
+/* ---------- draft flow & particles ---------- */
+function computeFlow() {
+  L.flow = new Map(); if (L.def.theme !== 'salt') return;
+  const ex = L.objects.find(o => o.exit) || L.objects.find(o => o.kind === 'cauldron');
+  const src = L.def.id === 'l3' ? { x: 11, y: 10 } : ex; if (!src) return;
+  const dist = new Map(); const q = [[src.x, src.y]]; dist.set(K(src.x, src.y), 0);
+  while (q.length) { const [x, y] = q.shift(); const d = dist.get(K(x, y));
+    for (const [dx, dy] of DIRS.slice(0, 4)) { const nx = x + dx, ny = y + dy; const c = tile(nx, ny); const k = K(nx, ny);
+      if ((c === '.' || c === '~' || (c === ',' && L.calm)) && !dist.has(k)) { dist.set(k, d + 1); q.push([nx, ny]); } } }
+  L.dist = dist;
+}
+let parts = null;
+function buildParticles() {
+  if (parts) { scene.remove(parts.pts); parts = null; }
+  const n = 260; const geo = new THREE.BufferGeometry(); const pos = new Float32Array(n * 3);
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const T = L.def.theme;
+  const m = new THREE.PointsMaterial({ color: T === 'path' ? 0xbfdcff : 0xf3ecdc, size: T === 'path' ? .09 : .06, transparent: true, opacity: T === 'path' ? .7 : .55, depthWrite: false });
+  const pts = new THREE.Points(geo, m); scene.add(pts);
+  parts = { pts, pos, n, life: new Float32Array(n), vx: new Float32Array(n), vz: new Float32Array(n) };
+  for (let i = 0; i < n; i++) resetPart(i, true);
+}
+function resetPart(i, init) {
+  const p = parts; const list = L.floorList.filter(f => L.def.theme === 'path' ? true : (f[2] === '.' || f[2] === '~' || (f[2] === ',' && L.calm)));
+  const f = list.length ? rnd(list) : [0, 0];
+  p.pos[i * 3] = f[0] + Math.random() - .5; p.pos[i * 3 + 1] = .2 + Math.random() * .8; p.pos[i * 3 + 2] = f[1] + Math.random() - .5;
+  p.life[i] = (init ? Math.random() : 1) * 4 + 1;
+}
+function stepParticles(dt) {
+  if (!parts) return; const p = parts;
+  for (let i = 0; i < p.n; i++) {
+    let x = p.pos[i * 3], z = p.pos[i * 3 + 2];
+    if (L.def.theme === 'salt' && L.dist) {
+      const tx = Math.round(x), tz = Math.round(z); const d = L.dist.get(K(tx, tz));
+      let vx = 0, vz = 0;
+      if (d !== undefined) { let best = d; for (const [dx, dy] of DIRS.slice(0, 4)) { const nd = L.dist.get(K(tx + dx, tz + dy)); if (nd !== undefined && nd < best) { best = nd; vx = dx; vz = dy; } } }
+      const sp = (C && C.inhale) ? 2.6 : 1.1;
+      x += (vx * sp + (Math.random() - .5) * .3) * dt; z += (vz * sp + (Math.random() - .5) * .3) * dt;
+    } else { x += Math.sin(i + performance.now() * .0004) * .15 * dt; z += .06 * dt; p.pos[i * 3 + 1] += .05 * dt; }
+    p.pos[i * 3] = x; p.pos[i * 3 + 2] = z; p.life[i] -= dt;
+    if (p.life[i] <= 0) resetPart(i);
+  }
+  p.pts.geometry.attributes.position.needsUpdate = true;
+}
+
+/* ---------- witcher senses ---------- */
+function refreshSense() {
+  if (!L) return;
+  L.group.children.filter(o => o.userData.sense).forEach(o => L.group.remove(o));
+  if (!ui.sense) { if (L.crystalMesh) L.crystalMesh.material.emissive.setHex(0x332e26); return; }
+  if (L.crystalMesh) L.crystalMesh.material.emissive.setHex(0xa02818);
+  const add = (x, y, color, s = .9) => { const m = new THREE.Mesh(GEO.hl, new THREE.MeshBasicMaterial({ color, transparent: true, opacity: .35, depthWrite: false })); m.rotation.x = -Math.PI / 2; m.position.set(x, .03, y); m.scale.setScalar(s); m.userData.sense = true; L.group.add(m); };
+  L.objects.forEach(o => { if (!o.gone && o.act) add(o.x, o.y, 0xe0a040, 1); });
+  if (L.def.id === 'l5') { for (let y = 4; y < L.h; y++) for (let x = 13; x < L.w; x++) if (tile(x, y) === '.') add(x, y, 0xc04030, .35); }
+  if (L.def.id === 'l7') { L.marks.forEach(m => m.material.color.setHex(0xff6a3a)); }
+  else L.marks.forEach(m => m.material.color.setHex(0x2c4a63));
+  if (C) { const b = unitById('boss'); if (b && b.kind === 'strem' && !G.flags.stirrup) { G.flags.stirrup = true; log('Чутьё: на серебряном стремени выбито старое имя — «Аэлиндар».'); } }
+}
+
+/* ================= COMBAT ================= */
+function hostile(a, b) { if (!a || !b) return false; const ta = a.st.charm ? 'party' : a.team, tb = b.st.charm ? 'party' : b.team; if (ta === 'neutral' || tb === 'neutral') return false; return ta !== tb; }
+function enemiesOf(u) { return units.filter(o => o.alive && !o.down && hostile(u, o) && !o.hiddenUnit); }
+function shinNoiseVolley(src) {
+  if (L.def.theme !== 'salt' || L.calm) return;
+  if (L.def.id === 'l3') { if (C && C.inhale) return; const nearVent = L.objects.some(o => o.vent && cheb(o, src) <= 1); if (nearVent) return; }
+  else if (tile(src.x, src.y) !== ',') return;
+  floatText(src, 'Иглы!', '#f3ecdc'); log('Соляные иглы бьют на шум.');
+  const hitList = L.def.id === 'l3' ? (src.team === 'party' ? [src] : []) : units.filter(u => u.alive && !u.down && u.team === 'party' && dst(u, src) <= 3 && tile(u.x, u.y) === ',');
+  hitList.forEach(u => harm(null, u, 4, { trap: true }));
+}
+function harm(src, tgt, amount, o = {}) {
+  if (!tgt.alive || tgt.down) return 0;
+  if (tgt.st.fog && !o.force) { floatText(tgt, 'в тумане', '#9fc3ff'); return 0; }
+  if (tgt === shin() && src && src.rank && !o.trap) { floatText(tgt, 'уклон', '#cfe0ee'); return 0; }
+  if (tgt.quen > 0 && !o.pierceQuen) { tgt.quen--; floatText(tgt, 'Квен', '#ffd27a'); if (tgt === shin()) { G.quen = tgt.quen; updateHUD(); } return 0; }
+  let d = amount; if (!o.fire && !o.trap) d = Math.max(1, d - (o.armor !== undefined ? o.armor : tgt.armor));
+  if (o.fire) d = Math.max(1, d - Math.floor(tgt.armor / 2));
+  tgt.hp = Math.max(0, tgt.hp - d); floatText(tgt, '−' + d, tgt.team === 'party' ? '#ff8f80' : '#fff');
+  if (tgt === shin()) { G.hp = tgt.hp; updateHUD(); }
+  if (tgt.hp <= 0) { if (tgt.team === 'party') { if (tgt === shin()) { tgt.down = true; } else { tgt.down = true; floatText(tgt, 'при смерти', '#ff8f80'); tgt.mesh.userData.inner.rotation.z = 1.4; } } else { killUnit(tgt); onKill(tgt); } }
+  return d;
+}
+function onKill(u) {
+  if (C) C.xp += u.xp || 0;
+  if (u.id === 'boss') return;
+  if (u.kind === 'antip') { G.flags.antipDead = true; }
+}
+function atkResolve(a, t, mult = 1, opts = {}) {
+  let acc = a.acc + (opts.accBonus || 0) + (a === shin() && L.def.ch === 2 ? 1 : 0); let def = t.def + (opts.defMod || 0);
+  if (t.id === 'boss' && C && C.inhale && t.kind === 'solevar') def = 8;
+  if (t.kind === 'antip' && G.flags.chainCut) def -= 2;
+  if (t.id === 'boss' && t.kind === 'strem' && G.flags.strapCut) def -= 2;
+  if (t.st.trip) def -= 4;
+  const hit = acc >= def; let dmg = a.dmg + (a.st.grom ? 2 : 0);
+  if (a === shin() && L.def.ch === 2 && G.flags.oilOn) dmg += 2;
+  if (a === shin() && ['solevar', 'antip', 'convict', 'miner', 'brother'].includes(t.kind)) dmg += 1;
+  let armor = t.armor; if (t.kind === 'solevar') { armor = C && C.inhale ? 0 : (C && C.phase >= 2 ? 5 : 3); if (t.st.crust) armor = Math.max(0, armor - 2); if (C && C.inhale) dmg += 3; }
+  if (t.kind === 'antip' && G.flags.chainCut) armor = 1;
+  if (!hit) dmg = Math.ceil(dmg / 2);
+  return { dmg: Math.round(dmg * mult), armor, hit };
+}
+async function lunge(a, t) {
+  const m = a.mesh; const dx = t.x - a.x, dz = t.y - a.y; const len = Math.hypot(dx, dz) || 1;
+  m.rotation.y = Math.atan2(dx, dz);
+  for (let i = 0; i <= 6; i++) { const k = Math.sin(i / 6 * Math.PI) * .32; m.position.x = a.px + dx / len * k; m.position.z = a.pz + dz / len * k; await sleep(16); }
+}
+async function meleeAttack(a, t, opts = {}) {
+  await lunge(a, t);
+  const strikes = a.strikes || 1; let mult = opts.mult || 1;
+  for (let s = 0; s < strikes && t.alive && !t.down; s++) {
+    const r = atkResolve(a, t, mult, opts);
+    harm(a, t, r.dmg, { armor: r.armor });
+    if (s === 0 && a === shin() && mult > 1) floatText(t, 'крит', '#ffd27a');
+    if (strikes > 1) await sleep(180);
+  }
+  if (!opts.quiet) shinNoiseVolley(a);
+}
+function rangedHit(a, t, opts = {}) { const r = atkResolve(a, t, 1, opts); harm(a, t, r.dmg, { armor: r.armor }); }
+
+async function startCombat(group) {
+  if (C) return; const s = shin(); s.queue = []; await waitIdle();
+  const foes = units.filter(u => u.alive && u.team === 'enemy' && (u.group === group || dst(u, s) <= 6));
+  if (!foes.length) return;
+  C = { units: [], idx: -1, round: 0, group, xp: 0, inhale: false, phase: 1, cycle: 0, slam: null, flood: 0, sel: 'sword', moved: false, telegraph: [] };
+  const party = units.filter(u => u.alive && !u.down && u.team === 'party');
+  const ini = u => (u.id === 'shin' ? 30 : u.team === 'party' ? 20 - ['li', 'ren', 'ragna', 'yon'].indexOf(u.id) : 10 + (u.speed || 0) + (u.boss ? 5 : 0));
+  C.units = [...party, ...foes].sort((a, b) => ini(b) - ini(a));
+  units.forEach(u => { if (u.team !== 'neutral') u.tag.hidden = !u.alive; });
+  $('#order').hidden = false; $('#acts').hidden = false;
+  if (L.def.id === 'l1' && !G.flags.gervSeen) await gervChapel();
+  if (L.def.id === 'l3') await bossIntroSolevar();
+  if (L.def.id === 'l9') await bossIntroStrem();
+  if (L.def.id === 'l7') hint('Отражение повторяет твои движения с опозданием в такт.');
+  if (ui.sense) refreshSense(); if (G.flags.moonNext) { C.moon = 3; G.flags.moonNext = false; }
+  log('Бой.'); nextTurn();
+}
+function renderOrder() {
+  const o = $('#order'); o.innerHTML = '';
+  C.units.forEach((u, i) => { if (!u.alive || u.down || u.hiddenUnit) return; const s = document.createElement('span'); s.textContent = u.name; s.className = (u.team === 'party' ? 'p' : 'e') + (i === C.idx ? ' now' : ''); o.appendChild(s); });
+  if (C.inhale !== undefined && L.def.id === 'l3') { const s = document.createElement('span'); s.textContent = C.inhale ? 'ВДОХ' : 'выдох ' + (C.cycle % 4) + '/3'; s.style.color = C.inhale ? '#9fd0ff' : ''; o.appendChild(s); }
+  if (C.flood) { const s = document.createElement('span'); s.textContent = 'обвал через ' + C.flood; s.style.color = '#ff8f80'; o.appendChild(s); }
+  if (C.melt) { const s = document.createElement('span'); s.textContent = 'брод тает: ' + C.melt; s.style.color = '#9fd0ff'; o.appendChild(s); }
+}
+function combatOver() {
+  const foes = C.units.filter(u => u.team === 'enemy' && u.alive && !u.st.charm);
+  if (!foes.length) return 'win';
+  if (shin().down || shin().hp <= 0) return 'lose';
+  return null;
+}
+async function nextTurn() {
+  while (true) {
+    if (!C || C.over) return;
+    const res = combatOver(); if (res) return endCombat(res);
+    C.idx++;
+    if (C.idx >= C.units.length) { C.idx = 0; await newRound(); if (!C || C.over) return; const r2 = combatOver(); if (r2) return endCombat(r2); }
+    const u = C.units[C.idx]; if (!u.alive || u.down) continue;
+    renderOrder(); highlightActive(u);
+    // statuses
+    if (u.st.burn) { u.st.burn--; harm(null, u, 3, { fire: true, force: true }); await sleep(300); if (!u.alive) continue; }
+    if (u.st.charm) u.st.charm--;
+    if (u.st.slowT) { u.st.slowT--; }
+    if (u.st.stun) { u.st.stun--; floatText(u, 'оглушён', '#ffd27a'); log(u.name + ' пропускает ход.'); await sleep(550); continue; }
+    if (u.st.fog) u.st.fog = 0, u.mesh.visible = true;
+    if (u === shin()) { await playerTurn(); }
+    else { await aiTurn(u); await sleep(220); }
+    ['grom', 'petri'].forEach(k => { if (u.st[k]) u.st[k]--; });
+    if (u === shin()) { if (u.st.ney) { u.st.ney--; G.en = Math.min(14, G.en + 2); } updateHUD(); }
+  }
+}
+async function newRound() {
+  C.round++; if (C.moon) C.moon--;
+  if (L.def.ch === 1 || L.def.id === 'l9') { /* energy regen in crypt only */ }
+  if (L.def.ch === 1) { G.en = Math.min(14, G.en + 1); updateHUD(); }
+  // yrden zones tick
+  L.zones = (L.zones || []).filter(z => --z.t > 0); drawZones();
+  if (L.def.id === 'l3') await solevarRound();
+  if (L.def.id === 'l9') await stremRound();
+  if (L.def.id === 'l2' && C.collapse) { await resolveTelegraph(); }
+}
+function highlightActive(u) { units.forEach(o => { const r = o.mesh.userData.ring; if (r) r.material.opacity = o === u ? .9 : (C && o.alive && !o.down && o.team !== 'neutral' ? .35 : 0); }); }
+async function endCombat(res) {
+  clearHL(); $('#acts').hidden = true; $('#order').hidden = true; hint('');
+  const c = C; C = null; units.forEach(u => { u.tag.hidden = true; const r = u.mesh.userData.ring; if (r) r.material.opacity = 0; u.st = {}; if (u.hiddenUnit) { u.hiddenUnit = false; } u.mesh.visible = u.alive || u.team === 'party'; });
+  L.zones = []; drawZones();
+  if (res === 'lose') return defeat();
+  units.filter(u => u.team === 'party' && u.down).forEach(u => { u.down = false; u.hp = Math.max(1, Math.round(u.maxHp * .25)); u.mesh.userData.inner.rotation.z = 0; });
+  units.filter(u => u.team === 'party' && u.id !== 'shin').forEach(u => G.allies[u.id] = u.hp);
+  G.xp += c.xp; if (c.xp) log('Опыт +' + c.xp + '.');
+  updateHUD(); save();
+  await afterCombat(c);
+}
+async function defeat() {
+  await fade(true);
+  await sys(['[ Носитель пал ]', '[ Система возвращает к началу уровня ]'], 'Ещё раз');
+  G = JSON.parse(JSON.stringify(G.cp)); snapshotCP(); save(); enterLevel(G.lvl, true);
+}
+
+/* ---------- player turn ---------- */
+let turnResolve = null;
+const ACTS = [
+  ['sword', 'Меч', ''], ['aard', 'Аард', '2'], ['igni', 'Игни', '3'], ['yrden', 'Ирден', '3'], ['quen', 'Квен', '2'],
+  ['axii', 'Аксий', '3'], ['feint', 'Финт', 'быстр.'], ['bag', 'Сумка', 'быстр.'], ['special', 'Особое', ''], ['end', 'Конец', 'хода']];
+const COST = { aard: 2, igni: 3, yrden: 3, quen: 2, axii: 3 };
+function playerTurn() {
+  return new Promise(res => {
+    const s = shin(); s.mp = s.st.chained ? 0 : s.speed; if (s.st.chained) { s.st.chained = 0; log('Цепь держит — Шин не может сдвинуться.'); }
+    C.acted = false; C.bonus = false; C.sel = 'sword'; s.feint = false; turnResolve = res; renderActs(); showReach();
+    hint('Твой ход: касание по земле — идти, по врагу — ' + actName(C.sel) + '.');
+  });
+}
+function actName(id) { const a = ACTS.find(x => x[0] === id); return a ? a[1].toLowerCase() : ''; }
+function specialAvailable() {
+  const s = shin(); const out = [];
+  if (L.def.id === 'l2' && !G.flags.chainCut) { const a = L.objects.find(o => o.kind === 'anchor'); if (a && cheb(a, s) <= 1) out.push(['cut', 'Перерубить цепь у крепления']); }
+  if (L.def.id === 'l3' && C.phase >= 2 && G.flags.gervHung) { const h = L.objects.find(o => o.kind === 'hook'); if (h && cheb(h, s) <= 1) out.push(['unhook', 'Снять Гервазия с крюка']); }
+  if (L.def.id === 'l9' && C.phase === 3) { const b = unitById('boss'); if (G.flags.stirrup && !G.flags.named3) out.push(['name3', 'Назвать его имя трижды']); if (b && b.alive && cheb(b, s) <= 1 && !G.flags.strapCut) out.push(['strap', 'Перерубить ремень стремени']); }
+  return out;
+}
+function renderActs() {
+  const box = $('#acts'); box.innerHTML = ''; const s = shin();
+  ACTS.forEach(([id, label, sub]) => {
+    if (id === 'special' && !specialAvailable().length) return;
+    const b = document.createElement('button'); b.innerHTML = '<b>' + label + '</b><small>' + (sub || '&nbsp;') + '</small>';
+    if (id === C.sel) b.classList.add('sel'); if (id === 'end') b.classList.add('end');
+    const needAct = !['feint', 'bag', 'end'].includes(id);
+    let dis = (needAct && C.acted) || ((id === 'feint' || id === 'bag') && C.bonus) || (COST[id] && G.en < COST[id]);
+    if (id === 'igni' && tile(s.x, s.y) === '~') dis = true;
+    b.disabled = !!dis;
+    b.onclick = e => { e.stopPropagation(); onAct(id); }; box.appendChild(b);
+  });
+}
+async function onAct(id) {
+  if (ui.busy) return; const s = shin();
+  if (id === 'end') { endPlayerTurn(); return; }
+  if (id === 'feint') { C.bonus = true; s.feint = true; floatText(s, 'финт', '#ffd27a'); log('Финт: следующий удар мечом — критический.'); renderActs(); return; }
+  if (id === 'bag') { const used = await openBag(true); if (used) C.bonus = true; renderActs(); showReach(); return; }
+  if (id === 'quen') { G.en -= 2; s.quen = 2; G.quen = 2; C.acted = true; floatText(s, 'Квен', '#ffd27a'); updateHUD(); renderActs(); showReach(); return; }
+  if (id === 'special') { const opts = specialAvailable(); const i = opts.length === 1 ? 0 : await choose('', 'Что сделать?', opts.map(o => [o[1]])); await doSpecial(opts[i][0]); return; }
+  C.sel = id; renderActs(); showReach();
+  hint({ sword: 'Меч: коснись врага рядом или в зоне хода.', aard: 'Аард: коснись клетки в направлении удара (до 2 клеток).', igni: 'Игни: коснись клетки — поток огня на 4 клетки.', yrden: 'Ирден: коснись клетки в пределах 5 — круг-ловушка 3×3.', axii: 'Аксий: коснись врага в пределах 4 (не босса).' }[id] || '');
+}
+async function doSpecial(k) {
+  const s = shin(); C.acted = true;
+  if (k === 'cut') { G.flags.chainCut = true; const a = units.find(u => u.kind === 'antip'); log('Шин перерубает цепь у крепления. Антип теряет тягу.'); if (a) { floatText(a, 'цепь!', '#ffd27a'); bark(unitById('ragna'), 'Вот теперь он просто большой мужик в воде!'); } }
+  if (k === 'unhook') { G.flags.gervHung = false; G.flags.gervSaved = true; log('Шин снимает Гервазия с крюка. Йон уводит его к стене.'); bark(unitById('yon'), 'Держу его, брат!'); }
+  if (k === 'name3') { G.flags.named3 = true; G.flags.kortege = (G.flags.kortege || 0) + 1; const b = unitById('boss'); b.st.stun = 2; log('«Аэлиндар. Аэлиндар. Аэлиндар.» Стремянный замирает и смотрит на тот берег.'); floatText(b, 'вспомнил', '#9fd0ff'); }
+  if (k === 'strap') { G.flags.strapCut = true; const b = unitById('boss'); log('Ремень стремени лопается. Стремянный теряет опору.'); floatText(b, '−2 защиты', '#ffd27a'); }
+  updateHUD(); renderActs(); showReach();
+}
+function endPlayerTurn() { clearHL(); hint(''); const r = turnResolve; turnResolve = null; r && r(); }
+let hlMesh = null;
+function clearHL() { if (hlMesh) { L.group.remove(hlMesh); hlMesh = null; } C && (C.reach = null); }
+function showReach() {
+  clearHL(); const s = shin(); if (!C || !turnResolve) return;
+  const r = reachable(s, s.mp); C.reach = r; const n = r.size;
+  hlMesh = new THREE.InstancedMesh(GEO.hl, new THREE.MeshBasicMaterial({ color: 0x7fa7c9, transparent: true, opacity: .16, depthWrite: false }), n);
+  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0)); let i = 0;
+  r.forEach(e => { m4.compose(new THREE.Vector3(e.x, tile(e.x, e.y) === '~' ? -.1 : .025, e.y), q, new THREE.Vector3(1, 1, 1)); hlMesh.setMatrixAt(i++, m4); });
+  hlMesh.instanceMatrix.needsUpdate = true; L.group.add(hlMesh);
+  if (C.acted && s.mp < 1) hint('Действие потрачено. Нажми «Конец хода».');
+}
+async function combatTap(x, y) {
+  if (!turnResolve || ui.busy) return; const s = shin(); const t = unitAt(x, y);
+  const sel = C.sel;
+  if (t && hostile(s, t) && (sel === 'sword')) {
+    if (C.acted) { hint('Действие уже потрачено.'); return; }
+    if (cheb(s, t) > 1) { // move adjacent
+      let best = null; C.reach.forEach(e => { if (Math.max(Math.abs(e.x - t.x), Math.abs(e.y - t.y)) === 1 && (!best || e.c < best.c)) best = e; });
+      if (!best) { hint('Не дотянуться за этот ход.'); return; }
+      const p = pathFromReach(C.reach, best.x, best.y); s.mp -= best.c; await moveUnit(s, p);
+    }
+    C.acted = true; clearHL();
+    if (t.kind === 'mirror' && !s.feint) { await lunge(s, t); log('Отражение повторяет удар — Шин бьёт сам себя.'); harm(null, s, 3, { trap: true }); hint('Отражение копирует честный удар. Нужен финт (быстрое действие) перед ударом — или Аард в момент повтора.'); }
+    else { const mult = s.feint ? 2 : 1; await meleeAttack(s, t, { mult }); }
+    s.feint = false; renderActs(); showReach(); return;
+  }
+  if (['aard', 'igni', 'yrden', 'axii'].includes(sel)) {
+    if (C.acted) return; await castSign(sel, x, y); return;
+  }
+  // move
+  const e = C.reach && C.reach.get(K(x, y));
+  if (e && !(x === s.x && y === s.y)) { const p = pathFromReach(C.reach, x, y); s.mp -= e.c; clearHL(); await moveUnit(s, p); afterShinMoveInCombat(); renderActs(); showReach(); }
+}
+function afterShinMoveInCombat() { const s = shin(); if (L.def.ch === 2) checkFall(s); }
+async function castSign(sel, x, y) {
+  const s = shin(); const petri = s.st.petri ? 1.5 : 1;
+  if (sel === 'aard') {
+    if (Math.max(Math.abs(x - s.x), Math.abs(y - s.y)) > 2 || (x === s.x && y === s.y)) { hint('Аард бьёт на 1–2 клетки от Шина.'); return; }
+    G.en -= 2; C.acted = true; const ang = Math.atan2(y - s.y, x - s.x);
+    signFX(s, x, y, 0xcfe6ff);
+    if (L.def.id === 'l2') { log('Аард бьёт в своды — рассольный горизонт обваливается!'); floatText(s, 'обвал', '#ff8f80'); units.filter(u => u.alive && !u.down && dst(u, s) <= 2.5 && u !== s).forEach(u => harm(null, u, 6, { trap: true })); harm(null, s, 6, { trap: true }); }
+    const hits = units.filter(u => u.alive && !u.down && hostile(s, u) && dst(u, s) <= 2.3 && Math.abs(((Math.atan2(u.y - s.y, u.x - s.x) - ang + Math.PI * 3) % (Math.PI * 2)) - Math.PI) < .9);
+    for (const u of hits) {
+      if (u.kind === 'mirror') { harm(s, u, 15 * petri, { force: true, armor: 0 }); log('Аард раскалывает Отражение в момент повтора.'); continue; }
+      harm(s, u, Math.round(3 * petri), {}); if (!u.boss) { u.st.stun = 1; pushUnit(u, Math.sign(u.x - s.x), Math.sign(u.y - s.y), 2); } else { floatText(u, 'шатнулся', '#cfe0ee'); if (u.kind === 'strem' && C.charge) { C.charge = null; clearTelegraph(); log('Аард по ногам сбивает разгон.'); } }
+    }
+    if (L.def.theme === 'salt' && !L.calm) log('Аард рождает ветер: иглы рядом молчат.');
+  }
+  if (sel === 'igni') {
+    if (tile(s.x, s.y) === '~') { hint('Над рассолом Игни шипит и гаснет.'); return; }
+    if (x === s.x && y === s.y) return;
+    G.en -= 3; C.acted = true; const line = rayTiles(s.x, s.y, x, y, 4);
+    signFX(s, line[line.length - 1].x, line[line.length - 1].y, 0xff7a2a);
+    for (const p of line) { if (tile(p.x, p.y) === '~') { log('Огонь шипит над рассолом.'); break; } const u = unitAt(p.x, p.y); if (u && hostile(s, u)) { let d = Math.round(8 * petri); if (u.kind === 'solevar') { d += 2; u.st.crust = 3; log('Игни ломает соляную корку.'); } if (u.kind === 'strem' || u.kind === 'horse') d += 2; harm(s, u, d, { fire: true }); if (u.alive && !u.boss) u.st.burn = 2; } }
+    shinNoiseVolley(s);
+  }
+  if (sel === 'yrden') {
+    if (dst(s, { x, y }) > 5) { hint('Ирден — не дальше 5 клеток.'); return; }
+    G.en -= 3; C.acted = true; L.zones = L.zones || []; L.zones.push({ x, y, t: 3 }); drawZones(); signFX(s, x, y, 0xb07cff); log('Круг Ирдена ложится на землю.');
+    if (C.charge && C.charge.row !== undefined && Math.abs(y - C.charge.row) <= 1) log('Ирден на линии натиска.');
+  }
+  if (sel === 'axii') {
+    const t = unitAt(x, y); if (!t || !hostile(s, t) || dst(s, t) > 4) { hint('Аксий: враг в пределах 4.'); return; }
+    if (t.boss || t.elite) { G.en -= 3; C.acted = true; log(t.name + ' слишком силён для Аксия.'); floatText(t, 'сопротивляется', '#cfe0ee'); }
+    else { G.en -= 3; C.acted = true; t.st.charm = 2; floatText(t, 'Аксий', '#e7a0ff'); log(t.name + ' бьётся на твоей стороне два хода.'); }
+  }
+  updateHUD(); C.sel = 'sword'; renderActs(); showReach();
+}
+function signFX(s, x, y, color) {
+  const m = new THREE.Mesh(GEO.sph, new THREE.MeshBasicMaterial({ color, transparent: true, opacity: .8, depthWrite: false })); m.position.set(s.x, .6, s.y); L.group.add(m);
+  let t = 0; const iv = setInterval(() => { t += .07; m.position.set(s.x + (x - s.x) * t, .6, s.y + (y - s.y) * t); m.scale.setScalar(.4 + t); m.material.opacity = .8 * (1 - t); if (t >= 1) { clearInterval(iv); L.group.remove(m); } }, 16);
+}
+function rayTiles(x0, y0, x1, y1, n) { const out = []; const dx = x1 - x0, dy = y1 - y0; const len = Math.hypot(dx, dy) || 1; for (let i = 1; i <= n; i++) { const x = Math.round(x0 + dx / len * i), y = Math.round(y0 + dy / len * i); if (!isPathTile(tile(x, y))) break; out.push({ x, y }); } return out.length ? out : [{ x: x1, y: y1 }]; }
+function drawZones() {
+  L.group.children.filter(o => o.userData.zone).forEach(o => L.group.remove(o));
+  (L.zones || []).forEach(z => { const m = new THREE.Mesh(new THREE.RingGeometry(1.2, 1.45, 6), new THREE.MeshBasicMaterial({ color: 0xb07cff, transparent: true, opacity: .7, side: THREE.DoubleSide, depthWrite: false })); m.rotation.x = -Math.PI / 2; m.position.set(z.x, .05, z.y); m.userData.zone = true; L.group.add(m); });
+}
+function inYrden(u) { return (L.zones || []).some(z => Math.abs(u.x - z.x) <= 1 && Math.abs(u.y - z.y) <= 1); }
+function pushUnit(u, dx, dy, n) {
+  const path = []; let x = u.x, y = u.y;
+  for (let i = 0; i < n; i++) { const nx = x + (dx || 0), ny = y + (dy || 0); if (!walkable(nx, ny) || unitAt(nx, ny, u)) break; x = nx; y = ny; path.push({ x, y }); }
+  if (path.length) moveUnit(u, path, 8);
+}
+
+/* ---------- AI ---------- */
+async function aiTurn(u) {
+  u.mp = u.speed; if (inYrden(u)) { u.mp = Math.floor(u.mp / 2); }
+  if (u.kind === 'solevar') return solevarTurn(u);
+  if (u.kind === 'strem') return stremTurn(u);
+  if (u.kind === 'antip') return antipTurn(u);
+  if (u.hound) return houndTurn(u);
+  if (u.kind === 'driver') return driverTurn(u);
+  if (u.kind === 'mirror') return mirrorTurn(u);
+  if (u.team === 'party' && !u.st.charm) return allyTurn(u);
+  return basicMelee(u);
+}
+function nearestFoe(u, filter) { const f = enemiesOf(u).filter(o => !filter || filter(o)); f.sort((a, b) => dst(u, a) - dst(u, b)); return f[0]; }
+async function approach(u, t, range = 1) {
+  if (dst(u, t) <= range + .5 && (range > 1 || cheb(u, t) <= 1)) return true;
+  const p = astar(u, t.x, t.y, { goalBlocked: true, passAllies: false }); if (!p || !p.length) return false;
+  const steps = []; let budget = u.mp;
+  for (const st of p) { if (st.x === t.x && st.y === t.y) break; const c = stepCost(st.x, st.y, u); if (c > budget) break; budget -= c; steps.push(st); if (range > 1 && dst(st, t) <= range) break; if (range === 1 && cheb(st, t) <= 1) break; }
+  if (steps.length) await moveUnit(u, steps);
+  return range > 1 ? dst(u, t) <= range + .5 : cheb(u, t) <= 1;
+}
+async function basicMelee(u) {
+  const t = nearestFoe(u); if (!t) return;
+  if (await approach(u, t)) await meleeAttack(u, t, { quiet: u.team === 'enemy' });
+}
+async function allyTurn(u) {
+  const s = shin();
+  if (u.id === 'yon') { const hurt = units.filter(o => o.team === 'party' && o.alive && (o.down || o.hp < o.maxHp * .5)).sort((a, b) => a.hp - b.hp)[0];
+    if (hurt && !C.yonHeal) { if (await approach(u, hurt)) { C.yonHeal = true; if (hurt.down) { hurt.down = false; hurt.mesh.userData.inner.rotation.z = 0; } hurt.hp = Math.min(hurt.maxHp, hurt.hp + 10); floatText(hurt, '+10', '#9fe0a0'); if (hurt === s) { G.hp = s.hp; updateHUD(); } log('Йон перевязывает: ' + hurt.name + '.'); return; } } }
+  if (u.id === 'li') { const foes = enemiesOf(u).filter(o => dst(u, o) <= 8); if (C.round % 3 === 0 && foes.length >= 2) { log('Ли Сюэ: «Град»!'); foes.slice(0, 3).forEach(f => rangedHit(u, f)); return; }
+    const t = foes.sort((a, b) => (b.boss ? 1 : 0) - (a.boss ? 1 : 0) || a.hp - b.hp)[0]; if (t) { u.mesh.rotation.y = Math.atan2(t.x - u.x, t.y - u.y); rangedHit(u, t); return; } const n = nearestFoe(u); if (n) await approach(u, n, 7); return; }
+  const t = u.id === 'ren' ? (nearestFoe(u, o => o.boss || o.elite) || nearestFoe(u)) : nearestFoe(u);
+  if (!t) return; if (await approach(u, t)) await meleeAttack(u, t, { quiet: false });
+}
+async function houndTurn(u) {
+  const s = shin(); if (!(await approach(u, s))) return;
+  await lunge(u, s);
+  const dx = Math.sign(s.x - u.x), dy = Math.sign(s.y - u.y); const nx = s.x + dx, ny = s.y + dy;
+  const c = tile(nx, ny);
+  if (c === '%' || c === 'o') { log('Гончая толкает Шина к краю — в туман!'); await fallIntoFog(s); }
+  else if (walkable(nx, ny) && !unitAt(nx, ny)) { pushUnit(s, dx, dy, 1); floatText(s, 'толчок', '#cfe0ee'); }
+  else floatText(s, 'устоял', '#cfe0ee');
+}
+async function driverTurn(u) {
+  const s = shin(); const can = !inYrden(u) && !(C && C.moon > 0);
+  if (await approach(u, s, 2)) { await lunge(u, s); harm(u, s, u.dmg, {}); }
+  u.vanishTurn = !u.vanishTurn;
+  if (can && u.vanishTurn) { u.st.fog = 1; u.mesh.visible = false; log('Погонщик уходит в туман.'); const spots = freeAround(s.x, s.y, 8); const sp = spots[Math.floor(Math.random() * spots.length)]; if (sp) { u.x = sp.x; u.y = sp.y; u.px = sp.x; u.pz = sp.y; u.mesh.position.set(sp.x, 0, sp.y); } }
+}
+async function mirrorTurn(u) { const s = shin(); if (await approach(u, s)) await meleeAttack(u, s, { quiet: true }); }
+async function antipTurn(u) {
+  const s = shin(); const party = units.filter(o => o.team === 'party' && o.alive && !o.down);
+  if (C.collapse) return;
+  if (u.hp <= 60 && !C.didCollapse) { C.didCollapse = true; const t = rnd(party); C.collapse = { x: t.x, y: t.y }; C.telegraph = [t]; telegraphTiles(t.x, t.y, 1); log('Антип рвёт цепью свод — сверху сейчас рухнет!'); return; }
+  const t = party.filter(o => dst(o, u) <= 4).sort((a, b) => dst(a, u) - dst(b, u))[0];
+  if (t && !G.flags.chainCut) { await lunge(u, t); const r = atkResolve(u, t); harm(u, t, r.dmg, { armor: r.armor }); if (t.alive && !t.down) { const dx = Math.sign(u.x - t.x), dy = Math.sign(u.y - t.y); pushUnit(t, dx, dy, 2); if (t === s) log('Цепь Антипа тащит Шина в рассол.'); } return; }
+  await basicMelee(u);
+}
+async function resolveTelegraph() {
+  if (C.collapse) { const z = C.collapse; C.collapse = null; clearTelegraph(); log('Свод рушится!'); units.filter(o => o.alive && !o.down && Math.abs(o.x - z.x) <= 1 && Math.abs(o.y - z.y) <= 1).forEach(o => harm(null, o, 6, { trap: true })); await sleep(300); }
+}
+function telegraphTiles(cx, cy, r, color = 0xff3a2a) {
+  for (let y = cy - r; y <= cy + r; y++) for (let x = cx - r; x <= cx + r; x++) { if (!isPathTile(tile(x, y))) continue; const m = new THREE.Mesh(GEO.hl, new THREE.MeshBasicMaterial({ color, transparent: true, opacity: .42, depthWrite: false })); m.rotation.x = -Math.PI / 2; m.position.set(x, .04, y); m.userData.tele = true; L.group.add(m); }
+}
+function telegraphRow(row, color = 0x6fb0ff) { for (let x = 0; x < L.w; x++) if (isPathTile(tile(x, row))) { const m = new THREE.Mesh(GEO.hl, new THREE.MeshBasicMaterial({ color, transparent: true, opacity: .4, depthWrite: false })); m.rotation.x = -Math.PI / 2; m.position.set(x, .04, row); m.userData.tele = true; L.group.add(m); } }
+function clearTelegraph() { L.group.children.filter(o => o.userData.tele).forEach(o => L.group.remove(o)); }
+
+/* ---------- Solevar ---------- */
+async function bossIntroSolevar() {
+  await dialog([['Солевар', 'Смена не кончилась. Никто не уходит.'], ['Солевар', 'Кто вы такие, чтобы уходить?']]);
+  await barks([['ren', 'Это он. Босс.'], ['li', 'Он дышит. Тяга то к нему, то от него.']], 900);
+  await sys(['[ Подсказка Системы ]', '[ Хозяин дышит: три хода выдох, один ход вдох ]', '[ На вдохе корка раскрывается: броня 0, защита ниже ]', '[ На выдохе иглы бьют по тем, кто шумит не у чанов ]']);
+}
+async function solevarRound() {
+  const b = unitById('boss'); if (!b || !b.alive) return;
+  C.cycle++; C.inhale = (C.cycle % 4 === 0);
+  if (C.cycle % 4 === 3) { log('Медальон дрожит: следующий ход — вдох.'); floatText(shin(), 'медальон', '#9fd0ff'); }
+  if (C.inhale) { log('Солевар ВДЫХАЕТ: корка раскрыта, иглы молчат.'); units.filter(u => u.team === 'enemy' && u.kind === 'convict').forEach(u => { killUnit(u); }); }
+  else if (C.cycle % 4 === 1) { const edge = []; for (let y = 0; y < L.h; y++) for (let x = 0; x < L.w; x++) if (tile(x, y) === ',' && Math.hypot(x - 11, y - 10) > 6 && !unitAt(x, y)) edge.push({ x, y }); for (let i = 0; i < 2; i++) { const p = rnd(edge); if (p) { const c = makeUnit('convict', p.x, p.y, { group: 'boss', xp: 4 }); c.tag.hidden = false; C.units.push(c); } } log('«Смена не кончилась»: из канав лезут каторжане.'); }
+  if (C.slam) { const z = C.slam; C.slam = null; clearTelegraph(); log('Кирка-молот обрушивается!'); units.filter(o => o.alive && !o.down && o.team === 'party' && Math.abs(o.x - z.x) <= 1 && Math.abs(o.y - z.y) <= 1).forEach(o => harm(b, o, 10, { armor: 0 })); await sleep(350); }
+  if (C.rock) { const z = C.rock; C.rock = null; clearTelegraph(); units.filter(o => o.alive && !o.down && o.x === z.x && o.y === z.y).forEach(o => harm(null, o, 6, { trap: true })); log('Соляная глыба падает с потолка.'); }
+  if (C.phase === 3) { C.flood--; if (C.flood <= 0) { await vaultCollapse(); } }
+  renderOrder();
+}
+async function solevarTurn(b) {
+  if (C.phase === 1 && b.hp <= 165) { C.phase = 2; log('Солевар покрывается толстой коркой.'); await dialog([['Солевар', 'Смена! Где моя смена?!'], ['', '<em>Цепь хлещет через зал и выдёргивает Гервазия. Солевар вешает его на крюк над кипящим чаном.</em>']]); G.flags.gervHung = true; bark(unitById('yon'), 'Брат Гервазий! Шин, крюк!'); }
+  if (C.phase === 2 && b.hp <= 75) { C.phase = 3; C.flood = 5; log('Корка отваливается. Рассол прорывает стены — свод не выдержит и пяти ходов.'); await dialog([['Солевар', 'Никто. Не уходит.']]); bark(unitById('ragna'), 'Добиваем, или нас тут засолят!'); }
+  if (C.inhale) { const far = units.filter(o => o.team === 'party' && o.alive && !o.down).sort((a, c) => dst(c, b) - dst(a, b))[0]; if (far) { pushUnit(far, Math.sign(b.x - far.x), Math.sign(b.y - far.y), 1); log('Вдох тянет ' + far.name + ' к хозяину.'); } return; }
+  const acts = C.phase === 3 ? 2 : 1;
+  for (let i = 0; i < acts; i++) {
+    const party = units.filter(o => o.team === 'party' && o.alive && !o.down);
+    if (!party.length) return;
+    if (C.round % 3 === 0 && i === 0 && unitById('ren') && unitById('ren').alive) { const ren = unitById('ren'); const li = unitById('li');
+      if (li && li.alive && !li.down) { log('Солевар рявкает «Окрик» — Ли Сюэ сбивает его выстрелом.'); bark(li, 'Не дам!'); } else { ren.st.stun = 1; log('«Окрик надсмотрщика»: Рэн стоит как каторжанин.'); } continue; }
+    if (!C.slam && (i === 1 || Math.random() < .45)) { let best = null, bc = -1; party.forEach(p => { const n = party.filter(o => Math.abs(o.x - p.x) <= 1 && Math.abs(o.y - p.y) <= 1).length; if (n > bc) { bc = n; best = p; } }); C.slam = { x: best.x, y: best.y }; telegraphTiles(best.x, best.y, 1); log('Солевар заносит кирку-молот — красная зона ударит в начале следующего хода.'); continue; }
+    const bright = party.filter(o => dst(o, b) <= 6).sort((a, c) => (c.id === 'ren' ? 1 : 0) - (a.id === 'ren' ? 1 : 0))[0] || party[0];
+    await lunge(b, bright); const r = atkResolve(b, bright); harm(b, bright, r.dmg, { armor: r.armor }); log('Кандальный кнут по ' + bright.name + '.');
+  }
+  if (C.phase === 2 && C.round % 2 === 0 && !C.rock) { const t = rnd(units.filter(o => o.team === 'party' && o.alive && !o.down)); if (t) { C.rock = { x: t.x, y: t.y }; telegraphTiles(t.x, t.y, 0, 0xffe0a0); } }
+}
+async function vaultCollapse() {
+  const b = unitById('boss'); log('Свод варницы рушится!');
+  units.filter(o => o.team === 'party' && o.alive && !o.down).forEach(o => harm(null, o, 6, { trap: true }));
+  if (G.flags.gervHung) { G.flags.gervHung = false; G.flags.gervDead = true; log('Крюк с Гервазием уходит под глыбы.'); }
+  if (b && b.alive) { G.flags.vaultCrushed = true; b.hp = 0; killUnit(b); }
+}
+
+/* ---------- Stremyanny ---------- */
+async function bossIntroStrem() {
+  await dialog([['Стремянный', 'Ты не всадник. Ты не добыча.'], ['Стремянный', 'Ты нёс рог моего господина? Нет. Ты его сломал.'], ...(G.flags.named ? [['Стремянный', 'Я знаю, как тебя звать. Тропа сказала.']] : [])]);
+}
+async function stremRound() {
+  const b = unitById('boss'); if (!b || !b.alive) return;
+  if (C.charge) { const row = C.charge.row; C.charge = null; clearTelegraph();
+    const tripped = (L.zones || []).some(z => Math.abs(z.y - row) <= 1);
+    if (tripped) { b.st.trip = 1; b.st.stun = 1; log('Конь спотыкается в круге Ирдена — Стремянный открыт!'); floatText(b, 'споткнулся', '#ffd27a'); }
+    else { log('Натиск по броду!'); units.filter(o => o.team === 'party' && o.alive && !o.down && o.y === row).forEach(o => { if (o.quen) { o.quen = 0; if (o === shin()) G.quen = 0; floatText(o, 'Квен сорван', '#ffd27a'); } else harm(b, o, 12, { armor: 0 }); });
+      let nx = b.x < 10 ? 15 : 4; for (let t = 0; t < 12 && (unitAt(nx, row, b) || !walkable(nx, row)); t++) nx += nx > 9 ? -1 : 1;
+      b.queue = []; b.x = nx; b.y = row; b.px = nx; b.pz = row; b.mesh.position.set(nx, 0, row);
+      for (let k = 0; k < 2; k++) { const cx = 5 + Math.floor(Math.random() * 10); if (tile(cx, row) === '.' && !unitAt(cx, row)) setTile(cx, row, 'o'); } rebuildTiles(); }
+    updateHUD(); }
+  if (C.phase === 3) { C.melt--; meltFord(); if (C.melt <= 0) { await fordGone(); return; } }
+  renderOrder();
+}
+function meltFord() { const order = [[2, 7], [3, 6], [4, 5]]; const k = (G.flags.yasliNone ? 4 : 3) - C.melt - 1; const rows = order[Math.min(2, Math.max(0, k))]; rows.forEach(r => { for (let x = 4; x <= 15; x++) if (tile(x, r) === '.' && !unitAt(x, r)) setTile(x, r, 'o'); }); rebuildTiles(); log('Плиты брода тают.'); }
+async function fordGone() {
+  log('Брод уходит в Ничто.'); C.over = true; await sleep(400);
+  await sys(['[ Брод растаял ]', '[ Носитель выброшен к порогу ]', '!Стремянный теперь знает тебя.'], 'Ещё раз');
+  C = null; G = JSON.parse(JSON.stringify(G.cp)); snapshotCP(); save(); enterLevel(G.lvl, true);
+}
+async function stremTurn(b) {
+  const s = shin(); if (b.st.trip) b.st.trip = 0;
+  if (C.phase === 1 && b.hp <= b.maxHp - 30) { C.phase = 2; await stremPhase2(b); return; }
+  if (C.phase === 2 && b.hp <= 20) { C.phase = 3; C.melt = G.flags.yasliNone ? 4 : 3; log('Стремянный бросает Перекличку в реку. Брод начинает таять.'); await dialog([['Стремянный', 'Брод уходит. Уйдёшь и ты.']]); hint(G.flags.stirrup ? 'Ты знаешь имя на стремени. «Особое» — назвать его или перерубить ремень.' : 'Чутьё: присмотрись к стремени.'); return; }
+  if (C.phase === 1 && !C.charge && C.round % 2 === 1) { const row = s.y; C.charge = { row }; telegraphRow(row); log('Стремянный разгоняется вдоль брода — синяя линия ударит в начале следующего хода.'); return; }
+  if (C.phase === 2 && Math.random() < .35 && dst(b, s) <= 3) { await lunge(b, s); if (s.quen) { s.quen--; G.quen = s.quen; floatText(s, 'Квен', '#ffd27a'); } else { s.st.chained = 1; log('Цепь «Переклички» захлёстывает Шина — на следующий ход он не сдвинется.'); } updateHUD(); return; }
+  if (await approach(b, s)) { await lunge(b, s); const r = atkResolve(b, s); harm(b, s, r.dmg, { armor: r.armor }); }
+}
+async function stremPhase2(b) {
+  log('Стремянный рвёт себя из седла.'); const sp = freeAround(b.x, b.y, 1)[0];
+  if (sp) { const h = makeUnit('horse', sp.x, sp.y, { group: 'boss' }); h.tag.hidden = false; C.units.splice(C.idx + 1, 0, h); }
+  b.look = {}; b.mesh.userData.inner.children.slice(0, 6).forEach(m => m.visible = false); b.speed = 4;
+  await sleep(300);
+  await dialog([['', '<em>Голубой огонь жаровни впервые на тропе отбрасывает тень Шина. Тень выше его. В капюшоне. С косой на плече.</em>'], ['Стремянный', 'Жнитва… Ты не добыча. Ты — поле.']]);
+  await sys(['[ Класс: — (ск██т) ]', '!█ ошибка синхронизации █'], 'Дальше');
+  b.st.stun = 1; log('Стремянный застыл. Шанс для критического удара.');
+  if (G.flags.named) { await dialog([['Стремянный', 'Шин Нодзен. В строй.']]); await sys(['[ Проверка: Воля 7 + 2 (Ловчий Охоты) против 11 → провал ]', '[ Шин скован на один ход ]']); shin().st.stun = 1; }
+  else { log('Стремянный ищет бирку с именем Шина на цепи и не находит: «Тебя нет в счёте».'); }
+}
+async function checkFall(s) {
+  const c = tile(s.x, s.y);
+  if (L.def.id === 'l7' && c === '-') {
+    setTile(s.x, s.y, 'o'); rebuildTiles(); const back = s.prev || { x: 1, y: 2 };
+    const inv = Object.keys(G.inv).filter(k => G.inv[k] > 0 && k !== 'water'); let lost = '';
+    if (inv.length) { const k = rnd(inv); G.inv[k]--; lost = ITEMS[k].name; }
+    s.x = back.x; s.y = back.y; s.px = back.x; s.pz = back.y; s.mesh.position.set(back.x, 0, back.y); s.queue = [];
+    await sys(['[ Плита без следа копыта рушится ]', '[ Ловкость 9 + 1 (Уклонение) против 9 → успех: Шин цепляется за край ]', lost ? '!Из сумки в Ничто падает: ' + lost : '[ Ничего не потеряно ]']);
+    return true;
+  }
+  return false;
+}
+async function fallIntoFog(s) {
+  G.en = Math.max(0, G.en - 2); updateHUD();
+  const back = nearestPath(s.x, s.y); if (back) { s.x = back.x; s.y = back.y; s.px = back.x; s.pz = back.y; s.mesh.position.set(back.x, 0, back.y); }
+  s.queue = []; if (C) s.mp = 0;
+  await sys(['[ Нарушен закон тропы: «Не сходи с серебра» ]', '[ Холод Междумирья: −2 Энергии ]']);
+}
+function nearestPath(x, y) { let best = null, bd = 1e9; for (let yy = 0; yy < L.h; yy++) for (let xx = 0; xx < L.w; xx++) if (walkable(xx, yy) && !unitAt(xx, yy) && tile(xx, yy) !== '+') { const d = Math.hypot(xx - x, yy - y); if (d < bd) { bd = d; best = { x: xx, y: yy }; } } return best; }
+
+/* ================= MOVEMENT ================= */
+function moveUnit(u, path, speed = 4.2) {
+  return new Promise(res => { if (!path || !path.length) return res(); u.queue = path.slice(); u.moveSpeed = speed; u.onDone = res; });
+}
+function waitIdle() { return new Promise(res => { const ch = () => { if (units.every(u => !u.queue.length)) res(); else setTimeout(ch, 50); }; ch(); }); }
+function stepUnits(dt) {
+  for (const u of units) {
+    if (!u.queue.length) continue;
+    const n = u.queue[0]; const dx = n.x - u.px, dz = n.y - u.pz; const d = Math.hypot(dx, dz); const sp = (u.moveSpeed || 4.2) * dt / SPEED;
+    if (d > .001) u.mesh.rotation.y = Math.atan2(dx, dz);
+    if (d <= sp) {
+      u.prev = { x: u.x, y: u.y }; u.px = n.x; u.pz = n.y; u.x = n.x; u.y = n.y; u.queue.shift();
+      if (u === shin() && !C) onShinStep(u);
+      if (!u.queue.length && u.onDone) { const f = u.onDone; u.onDone = null; f(); }
+    } else { u.px += dx / d * sp; u.pz += dz / d * sp; }
+    u.mesh.position.set(u.px, tile(Math.round(u.px), Math.round(u.pz)) === '~' ? -.18 : 0, u.pz);
+  }
+}
+let stepsWalked = 0;
+function onShinStep(s) {
+  // followers snake
+  const fol = units.filter(u => u.team === 'party' && u.id !== 'shin' && u.alive && !u.down);
+  let lead = s.prev;
+  for (const f of fol) { const t = lead; lead = { x: f.x, y: f.y }; if (t && (f.x !== t.x || f.y !== t.y) && !unitAt(t.x, t.y, f)) { const p = cheb(f, t) <= 1 ? [t] : astar(f, t.x, t.y, { passAllies: true }); if (p && p.length) { f.queue = p.slice(0, 3); f.moveSpeed = 4.6; } } }
+  stepsWalked++; if (L.def.ch === 1 && stepsWalked % 6 === 0 && G.en < 14) { G.en++; updateHUD(); }
+  // still air in exploration
+  if (L.def.theme === 'salt' && !L.calm && tile(s.x, s.y) === ',' && L.def.id === 'l0' && !G.flags.pocketHit && s.y <= 4) { G.flags.pocketHit = true; s.queue = []; needlesExplore(); }
+  if (L.def.id === 'l5' && tile(s.x, s.y) === '+' && s.x >= 21) { s.queue = []; G.flags.falseFork = true; fallIntoFog(s).then(() => { bark(s, '…ровная, как стол. Слишком ровная.'); }); }
+  if (L.def.id === 'l7' && (tile(s.x, s.y) === '-')) { s.queue = []; checkFall(s); }
+  if (L.def.ch === 2 && tile(s.x, s.y) === '%') { s.queue = []; fallIntoFog(s); }
+  checkTriggers(s);
+  // aggro
+  for (const e of units) {
+    if (!e.alive || e.team !== 'enemy' || C) continue;
+    const r = e.blind ? (L.calm ? 1.5 : 2.3) : e.boss ? 4.5 : e.hound ? 5 : 5;
+    if (dst(e, s) <= r) { s.queue = []; fol.forEach(f => f.queue = []); startCombat(e.group); return; }
+  }
+}
+async function needlesExplore() {
+  const s = shin(); floatText(s, 'Иглы!', '#f3ecdc');
+  if (s.quen) { s.quen--; G.quen = s.quen; floatText(s, 'Квен', '#ffd27a'); } else { s.hp = Math.max(1, s.hp - 4); G.hp = s.hp; floatText(s, '−4', '#ff8f80'); }
+  updateHUD(); await barks([['ragna', 'Ай! Чтоб тебя, соль!'], ['li', 'Здесь воздух стоит. Назад, по тяге.']], 1200);
+}
+function checkTriggers(s) { for (const t of L.triggers) { if (t.done) continue; if (s.x >= t.x1 && s.x <= t.x2 && s.y >= t.y1 && s.y <= t.y2) { t.done = true; t.fn(); } } }
+
+/* ================= INPUT ================= */
+const ray = new THREE.Raycaster(), plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), hit = new THREE.Vector3(), ndc = new THREE.Vector2();
+function tileFromScreen(cx, cy) { ndc.set(cx / window.innerWidth * 2 - 1, -(cy / window.innerHeight) * 2 + 1); ray.setFromCamera(ndc, camera); if (!ray.ray.intersectPlane(plane, hit)) return null; return { x: Math.round(hit.x), y: Math.round(hit.z) }; }
+const pointers = new Map(); let drag = null, pinch = null;
+canvas.addEventListener('pointerdown', e => { canvas.setPointerCapture(e.pointerId); pointers.set(e.pointerId, { x: e.clientX, y: e.clientY }); if (pointers.size === 1) drag = { x: e.clientX, y: e.clientY, moved: false }; if (pointers.size === 2) { const [a, b] = [...pointers.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), cam: camDist }; drag = null; } });
+canvas.addEventListener('pointermove', e => { if (!pointers.has(e.pointerId)) return; const p = pointers.get(e.pointerId); const dx = e.clientX - p.x, dy = e.clientY - p.y; pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (pinch && pointers.size === 2) { const [a, b] = [...pointers.values()]; const d = Math.hypot(a.x - b.x, a.y - b.y); camDist = clamp(pinch.cam * pinch.d / Math.max(30, d), 7, 24); return; }
+  if (drag) { if (Math.hypot(e.clientX - drag.x, e.clientY - drag.y) > 12) drag.moved = true; if (drag.moved) { const k = camDist / window.innerHeight * 1.4; camPan.x -= dx * k; camPan.z -= dy * k * 1.3; } } });
+const endPtr = e => { const wasDrag = drag && drag.moved; const single = pointers.size === 1 && !pinch; pointers.delete(e.pointerId); if (pointers.size < 2) pinch = null; if (single && drag && !wasDrag && e.type === 'pointerup') onTap(e.clientX, e.clientY); if (!pointers.size) drag = null; };
+canvas.addEventListener('pointerup', endPtr); canvas.addEventListener('pointercancel', endPtr);
+canvas.addEventListener('wheel', e => { camDist = clamp(camDist + Math.sign(e.deltaY) * 1.2, 7, 24); e.preventDefault(); }, { passive: false });
+let exploreLock = false;
+async function onTap(cx, cy) {
+  if (ui.busy || !L || !$('#title').hidden) return; const t = tileFromScreen(cx, cy); if (!t) return;
+  camPan.multiplyScalar(0);
+  if (C) return combatTap(t.x, t.y);
+  if (exploreLock) return;
+  const s = shin(); const u = unitAt(t.x, t.y);
+  if (u && u.team === 'neutral') return goInteract(u, () => talkTo(u));
+  const o = objAt(t.x, t.y) || L.objects.find(o2 => !o2.gone && o2.act && Math.abs(o2.x - t.x) <= 0 && Math.abs(o2.y - t.y) <= 0);
+  if (o && o.act) return goInteract(o, () => o.act(o));
+  if (u && u.team === 'enemy') { const p = astar(s, u.x, u.y, { goalBlocked: true }); if (p) { p.pop(); s.queue = p; } return; }
+  if (walkable(t.x, t.y)) { const p = astar(s, t.x, t.y, { passAllies: true }); if (p) { const blocked = p.length && unitAt(p[p.length - 1].x, p[p.length - 1].y, s); if (blocked) p.pop(); s.queue = p; s.moveSpeed = 4.2; } }
+}
+async function goInteract(target, fn) {
+  const s = shin();
+  if (cheb(s, target) > 1) {
+    let best = null, bd = 1e9; for (const [dx, dy] of DIRS) { const x = target.x + dx, y = target.y + dy; if (!walkable(x, y) || unitAt(x, y, s)) continue; const p = astar(s, x, y, { passAllies: true }); if (p && p.length < bd) { bd = p.length; best = p; } if (x === s.x && y === s.y) { best = []; bd = 0; } }
+    if (!best) { hint('Не подойти.'); return; }
+    exploreLock = true; await moveUnit(s, best); exploreLock = false; if (C) return;
+  }
+  s.mesh.rotation.y = Math.atan2(target.x - s.x, target.y - s.y);
+  await fn();
+}
+
+/* ================= ITEMS ================= */
+const ITEMS = {
+  lastochka: { name: 'Ласточка', desc: '+12 здоровья' }, grom: { name: 'Гром', desc: '+2 к урону на 3 хода' }, neyasyt: { name: 'Неясыть', desc: '+2 Энергии каждый ход, 3 хода' },
+  petri: { name: 'Зелье Петри', desc: 'Знаки сильнее в полтора раза, 3 хода' }, oil: { name: 'Масло против Охоты', desc: '+2 к урону мечом по существам Кортежа (до конца главы)' },
+  moon: { name: 'Лунная пыль', desc: 'Погонщики не уходят в туман 3 хода' }, samum: { name: 'Самум', desc: 'Оглушает врагов рядом с Шином на ход' }, water: { name: 'Пресная вода', desc: 'Фляга из погреба бургомистра' }
+};
+function openBag(inCombat) {
+  return new Promise(res => {
+    ui.busy++; const bag = $('#bag'), box = $('#bagIn'); box.innerHTML = '<h3>Сумка</h3>';
+    Object.keys(ITEMS).forEach(k => { if (!G.inv[k]) return; if (k === 'water') { const d = document.createElement('div'); d.style.cssText = 'font-size:13px;color:var(--muted);padding:2px'; d.textContent = 'Пресная вода ×' + G.inv[k] + ' — пригодится тем, кому соль выела глаза.'; box.appendChild(d); return; }
+      if (k === 'oil' && (L.def.ch !== 2 || G.flags.oilOn)) return; if (k === 'moon' && L.def.ch !== 2) return; if (k === 'samum' && !inCombat) return;
+      const b = document.createElement('button'); b.innerHTML = '<b>' + ITEMS[k].name + ' ×' + G.inv[k] + '</b><span>' + ITEMS[k].desc + '</span>'; b.onclick = () => { close(); useItem(k, inCombat); res(true); }; box.appendChild(b); });
+    const c = document.createElement('button'); c.innerHTML = '<b>Закрыть</b>'; c.onclick = () => { close(); res(false); }; box.appendChild(c);
+    const close = () => { bag.hidden = true; ui.busy--; }; bag.hidden = false;
+  });
+}
+function useItem(k, inCombat) {
+  const s = shin(); G.inv[k]--;
+  if (k === 'lastochka') { s.hp = Math.min(s.maxHp, s.hp + 12); G.hp = s.hp; floatText(s, '+12', '#9fe0a0'); }
+  if (k === 'grom') s.st.grom = 3; if (k === 'petri') s.st.petri = 3; if (k === 'neyasyt') s.st.ney = 3;
+  if (k === 'oil') { G.flags.oilOn = true; log('Масло против Охоты на клинке.'); }
+  if (k === 'moon') { units.filter(u => u.kind === 'driver').forEach(u => { u.st.fog = 0; u.mesh.visible = u.alive; }); log('Лунная пыль: погонщики не уйдут в туман.'); if (C) C.moon = 3; else G.flags.moonNext = true; }
+  if (k === 'samum') { units.filter(u => u.alive && hostile(s, u) && cheb(u, s) <= 1 && !u.boss).forEach(u => { u.st.stun = 1; floatText(u, 'ослеп', '#ffd27a'); }); }
+  log(ITEMS[k].name + '.'); updateHUD(); save();
+}
+
+/* ================= CONTENT: interactions ================= */
+async function corpseAct(o) {
+  const i = await choose('Тело солекопа', 'Засолен вместе с кирками. Умер не больше трёх дней назад.', [['Слух мёртвых', '2 Энергии', G.en < 2], ['Осмотреть'], ['Отойти']]);
+  if (i === 0) { G.en -= 2; updateHUD(); await dialog([['Эхо', '…не по тяге… ниша… там тихо… тихо — значит, бьёт…'], ['', '<em>Последнее, что он слышал: сухой треск соли в мёртвом воздухе.</em>']]); G.xp += 10; }
+  if (i === 1) await dialog([['', 'В кулаке зажата тряпица. Ею он, видно, проверял, куда тянет воздух.']]);
+}
+async function lootAct(o) {
+  if (o.gone) return; o.gone = true; L.group.remove(o.mesh);
+  if (L.def.id === 'l0') { G.inv.lastochka++; await sys(['[ Найдено ]', 'Ласточка ×1', 'Кандальные звенья ×3 (для кузнеца)']); }
+  if (L.def.id === 'l3') { await sys(['[ Сундучок надсмотрщика ]', 'Жалованье за сто лет: старые кроны, ≈120 по весу']); G.flags.wages = true; }
+  refreshSense(); save();
+}
+async function exitAct(o) {
+  const enemiesLeft = units.some(u => u.alive && u.team === 'enemy');
+  if (L.def.id === 'l1' && !G.flags.chapelDone) { bark(unitById('yon'), 'Сперва братья, ведьмак. Не бросай их так.'); }
+  if (L.def.id === 'l2' && !G.flags.cageDone) { const ok = await choose('', 'Клеть над рассолом так и висит. Уйти дальше?', [['Вернуться к клети'], ['Идти дальше']]); if (ok === 0) return; }
+  if (enemiesLeft && L.def.ch === 1 && L.def.id !== 'l1') { /* allowed */ }
+  await nextLevel();
+}
+async function restAct(o) {
+  if (o.used) { await dialog([['', 'Здесь уже отдохнули.']]); return; }
+  const i = await choose(o.name, L.def.ch === 2 ? 'Голубой огонь не греет, но здесь иней отступает. Можно медитировать.' : 'Ниша за алтарём. Сквозняк, иглы не бьют, шахтёры не слышат. Единственный безопасный привал.', [['Медитировать', 'Энергия до максимума, отряд перевязывает раны'], ['Не сейчас']]);
+  if (i !== 0) return; o.used = true; G.en = 14; units.filter(u => u.team === 'party').forEach(u => { u.hp = Math.min(u.maxHp, u.hp + Math.round(u.maxHp * .5)); if (u.id !== 'shin') G.allies[u.id] = u.hp; }); G.hp = shin().hp; updateHUD(); save();
+  if (L.def.ch === 1) await barks([['ragna', 'Ведьмак, ты хоть вспотел?'], ['ren', 'Он вообще дышит? Я ни разу не видел, чтобы он запыхался.'], ['li', 'Он дышит в такт с шахтой. Я записала.']], 1600);
+  else await sys(['[ Привал ]', '[ Энергия: 14 / 14 ]']);
+}
+async function altarAct(o) {
+  const lines = [['', 'Алтарь, сложенный каторжанами из соляных глыб. На нём три свечи и фляга с последним глотком воды.'], ['', 'Под флягой записка: <em>«Соль выедает глаза. Вода возвращает лица»</em>.']];
+  if (!L.calm) lines.push(['', '<em>Свечи горят под углом. Левая клонится сильнее всех, средняя — меньше, правая еле дрожит.</em>']);
+  await dialog(lines);
+}
+async function damperAct(o) {
+  if (L.calm) { await dialog([['', 'Заслонка открыта. Воздух идёт.']]); return; }
+  L.dmp = L.dmp || [];
+  const i = await choose('Заслонка ' + ['левая', 'средняя', 'правая'][o.n - 1], 'Старый вентиляционный ход за соляным алтарём. Заслонка тугая и ржавая.', [['Открыть'], ['Оставить']]);
+  if (i !== 0) return;
+  L.dmp.push(o.n); o.mesh.children[1].position.y = 1;
+  const want = [1, 2, 3].slice(0, L.dmp.length);
+  if (L.dmp.join() !== want.join()) {
+    L.dmp = []; L.objects.filter(d => d.kind === 'damper').forEach(d => d.mesh.children[1].position.y = .5);
+    await sys(['[ Тяга уходит из часовни ]', '!Соляные иглы растут по всему залу']);
+    units.filter(u => u.team === 'party' && u.alive).forEach(u => { if (u.quen) { u.quen--; if (u === shin()) G.quen = u.quen; } else { u.hp = Math.max(1, u.hp - 4); if (u === shin()) G.hp = u.hp; } floatText(u, '−4', '#ff8f80'); });
+    updateHUD(); bark(unitById('ragna'), 'Ай! Не та!'); startCombat('chapel'); return;
+  }
+  if (L.dmp.length === 3) { L.calm = true; L.g.forEach(r => r.forEach((c, x) => { if (c === ',') r[x] = '.'; })); rebuildTiles(); buildParticles(); G.xp += 30; await sys(['[ Тяга вернулась в часовню ]', '[ Иглы осыпаются. Опыт +30 ]']); bark(unitById('li'), 'Нити тяги снова идут. Теперь тихо.'); }
+}
+async function brothersAct(o) {
+  if (G.flags.brothersRest) { await dialog([['', 'Пепел и соль. Братья спят.']]); return; }
+  const anyFoe = units.some(u => u.alive && u.team === 'enemy');
+  const i = await choose('Братья Ордена', 'Четверо в латах с языками пламени. Соль проросла сквозь ткань. Приор просил: «не дайте им встать».', [['Сжечь Игни', '3 Энергии — быстро, но шумно', G.en < 3], ['Йон поёт гимн, соль и огонь', anyFoe && !L.calm ? 'долго; в мёртвом воздухе шахтёры услышат' : 'долго и тихо'], ['Не трогать']]);
+  if (i === 2) return;
+  if (i === 0) { G.en -= 3; updateHUD(); signFX(shin(), o.x, o.y, 0xff7a2a); }
+  else { await dialog([['Йон', 'Пламя очищающее, прими братьев своих… <em>(гимн звучит под сводами)</em>'], ['Йон', '…и тех, кто жнёт милостиво, не оставь.']]); }
+  L.objects.filter(b => b.brother).forEach(b => { b.mesh.children.forEach(m => m.material = mat(0x2a2522)); });
+  G.flags.brothersRest = true; G.xp += 20; await sys(['[ Братья упокоены ]', '[ Опыт +20 ]']);
+  if ((i === 0 || !L.calm) && units.some(u => u.alive && u.team === 'enemy')) { log('Шум! Слепые шахтёры поворачивают головы.'); startCombat('chapel'); }
+  checkChapelDone();
+}
+function checkChapelDone() { if (G.flags.brothersRest && !units.some(u => u.alive && u.team === 'enemy')) G.flags.chapelDone = true; }
+async function gervChapel() {
+  G.flags.gervSeen = true;
+  const g = npcUnit('gervTmp', 'Гервазий', 11, 6, { body: 0x1b1b1d, head: 0xe9dfd2, hair: 0xb8b8b8, flame: 1 }); g.hiddenUnit = true;
+  await dialog([['Гервазий', 'Демоны! Демоны из иного мира! <em>(седой брат в измятых латах, глаза белые от соли)</em>'], ['Гервазий', 'А ты… Жнец. Жнец пришёл за душами! Не отдам вам братьев!']]);
+  await sys(['[ Скрытая цель открыта ]', '[ Спасти брата Гервазия живым ]']);
+  const ex = L.objects.find(o => o.exit); await moveUnit(g, astar(g, ex.x - 1, ex.y, { passAllies: true }) || [], 7); g.alive = false; g.mesh.visible = false; g.tag.hidden = true;
+  bark(unitById('yon'), 'Брат Гервазий! Он побежал вниз!');
+}
+async function afterCombat(c) {
+  if (L.def.id === 'l0') { await barks([['ragna', 'Ведьмак, ты хоть вспотел?'], ['ren', 'Ты их… как в замедленной съёмке.']], 1500); }
+  if (L.def.id === 'l1') {
+    if (!G.flags.brothersRest && !G.flags.brothersRose) { G.flags.brothersRose = true; await dialog([['', '<em>Тела у алтаря шевелятся. Соль хрустит в суставах. Мёртвые братья поднимаются и запевают ломаный гимн.</em>'], ['Йон', 'Нет… Братья…']]);
+      L.objects.filter(b => b.brother).forEach(b => { b.gone = true; L.group.remove(b.mesh); makeUnit('brother', b.x, b.y, { group: 'risen' }); }); refreshSense(); startCombat('risen'); return; }
+    if (G.flags.brothersRose && !G.flags.brothersRest) { G.flags.brothersRest = true; await barks([['yon', 'Простите нас, братья.']]); }
+    checkChapelDone();
+  }
+  if (L.def.id === 'l2' && G.flags.antipDead && !G.flags.antipLoot) { G.flags.antipLoot = true; await sys(['[ Колодник Антип пал ]', 'Камень силы C ×1', 'Кандальный ключ', 'Эхо: «Смена не кончилась»']); G.flags.key = true; }
+  if (L.def.id === 'l3') return solevarDefeated();
+  if (L.def.id === 'l9') return stremDefeated();
+  if (L.def.id === 'l5' && !units.some(u => u.alive && u.team === 'enemy')) await sys(['[ Клыки гончих ×2 ]', '[ Для масла против Охоты ]']);
+  if (L.def.id === 'l7') { await sys(['[ Отражение рассыпалось ]', 'Зеркальная крошка ×1']); }
+  save();
+}
+async function cageAct(o) {
+  if (G.flags.cageDone) { if (G.flags.gervInCage) return gervTalk(); await dialog([['', 'Клеть пуста.']]); return; }
+  const foes = units.some(u => u.alive && u.team === 'enemy');
+  if (foes) { await dialog([['Гервазий', '<em>(из клети над рассолом)</em> Не подходите! Пусть не пройдёт никто! Демоны…']]); return; }
+  const i = await choose('Ворот клети', 'Клеть висит над рассолом на цепи. Её держит ворот, а ворот — мешок соли-противовес. В клети — Гервазий.', [['Крутить ворот'], ['Снять мешок-противовес и опустить его в воду', 'не дёргая цепь'], ['Перерубить цепь']]);
+  G.flags.cageDone = true;
+  if (i === 1) { await dialog([['', 'Мешок уходит в рассол без всплеска. Ворот проворачивается сам, и клеть мягко опускается на камни.']]); G.xp += 20; }
+  else { await dialog([['', 'Цепь дёргается. Клеть срывается и падает в рассол.'], ['Йон', 'Держу!.. <em>(ныряет в латах и выволакивает клеть на берег)</em>']]); G.flags.gervHurt = true; const y = unitById('yon'); if (y) { y.hp = Math.max(1, y.hp - 8); G.allies.yon = y.hp; floatText(y, '−8', '#ff8f80'); } }
+  G.flags.gervInCage = true; await gervTalk();
+}
+async function gervTalk() {
+  const i = await choose('Гервазий', 'Жнец… ты пришёл за душами? Бери меня последним. Братьев не трогай. Остальные — демоны, у них святой огонь. <em>(глаза в соли, руки дрожат)</em>', [['Умыть ему лицо пресной водой', G.inv.water ? 'фляга ×' + G.inv.water : 'воды нет', !G.inv.water], ['Аксий: успокоить', '3 Энергии', G.en < 3], ['Оставить его здесь']]);
+  if (i === 0) { G.inv.water--; G.flags.gervSane = true; await dialog([['', 'Вода смывает соль. Гервазий моргает, и в глазах впервые появляются лица.'], ['Гервазий', '…брат Йон? Ты… а эти?'], ['Йон', 'Они не демоны, брат. Они пришли за нами.'], ['Гервазий', 'Я пойду. Только пусть мальчишка с огненным мечом держится подальше.']]); }
+  if (i === 1) { G.en -= 3; updateHUD(); G.flags.gervCalm = true; await dialog([['', 'Знак ложится мягко. Гервазий обмякает и послушно встаёт.'], ['Гервазий', 'Иду… Иду, Жнец…']]); }
+  if (i === 2) { await dialog([['Гервазий', 'Да. Да, оставь. Пусть никто не пройдёт…']]); G.flags.gervLeft = true; bark(unitById('li'), 'Мы правда оставим его здесь?'); }
+  if (i !== 2) { G.flags.gervInCage = false; G.flags.gervFollow = true; bark(unitById('ragna'), 'Ну хоть кто-то в этой шахте не пытается нас убить.'); }
+  save();
+}
+async function anchorAct(o) { if (C) return; await dialog([['', 'Крепление кандальной цепи вбито в скалу. Если перерубить его в бою, великан в рассоле потеряет тягу.']]); }
+async function hookAct(o) { await dialog([['', G.flags.gervHung ? 'На крюке над кипящим рассолом висит Гервазий.' : 'Ржавый крюк над чаном.']]); }
+async function plateAct(o) {
+  await dialog([['', 'Плита в человеческий рост. На ней высечены двести четырнадцать имён каторжан и королевская надпись: <em>«Смена закончена»</em>.'], ['', 'Ниже — освящение Ордена: сто лет назад приор здешней часовни освятил закладку, чтобы шахту не раскапывали. <em>Орден знал, что под завалом живые.</em>']]);
+  if (G.flags.key && !G.flags.chainFreed) { const i = await choose('', 'В основании плиты — замок кандальной цепи. Кандальный ключ Антипа подходит.', [['Отпереть цепь', 'каторжане уйдут'], ['Не трогать']]); if (i === 0) { G.flags.chainFreed = true; G.xp += 50; await dialog([['', 'Ключ проворачивается. Где-то в глубине со звоном рвётся цепь, и сквозняк уходит наружу. Двести четырнадцать человек уходят домой.']]); await sys(['[ Цепь разорвана ]', '[ Опыт +50 ]']); } }
+}
+async function solevarDefeated() {
+  await sleep(300);
+  if (!G.flags.vaultCrushed) await dialog([['Солевар', 'Смена… кончилась?.. <em>(корка осыпается, и под ней — просто усталый старик)</em>']]);
+  const gervOk = !G.flags.gervDead;
+  G.flags.gervAlive = gervOk;
+  const lines = ['[ Срочное задание «Красные врата Гронека» выполнено ]', '[ Опыт +250 · Очко навыков +1 · Эхо Солевара ]'];
+  if (!G.flags.vaultCrushed) lines.push('[ Камни силы C ×2 · Сердце врат · Мутаген «Соляной надсмотр» ]'); else lines.push('!Свод похоронил сердце врат.');
+  lines.push(gervOk ? '[ Скрытая цель выполнена: Гервазий жив · Опыт +100 ]' : '!Скрытая цель не выполнена');
+  G.xp += 250 + (gervOk ? 100 : 0);
+  await sys(lines);
+  if (!G.flags.vaultCrushed) await barks([['ren', 'Мы… сделали это. По-настоящему.'], ['ragna', 'Пиво. Мне нужно пиво. Ведромом.'], ['li', 'Я запишу их имена. Всех, до кого дотянусь.']], 1500);
+  hint('Плёнка гаснет. Час на выход. Можно осмотреть варницу или идти к выходу.');
+  const ex = makeProp('exit', 11, 20, { block: false, name: 'Выход наверх', exit: true, act: exitAct }); refreshSense(); save();
+}
+async function talkTo(u) {
+  const id = u.id;
+  if (id === 'kassian') {
+    if (G.flags.gervAlive) await dialog([['Приор Кассиан', 'Гервазий рассказал. Про воду. Про то, что вы несли его, а не «души».'], ['Приор Кассиан', 'Я называл тебя Жнецом, ведьмак. Видно, ошибся в том, кого жнут.'], ['Приор Кассиан', 'Орден услышит это от меня. Не от слухов.']]);
+    else await dialog([['Приор Кассиан', 'Пятеро ушли вниз. Ни один не вернулся.'], ['Приор Кассиан', 'Жнец вышел. Это всё, что Гронек запомнит.']]);
+    if (G.flags.chainFreed) await dialog([['Приор Кассиан', 'Плита… Ты видел плиту. <em>(долгая пауза)</em> Я… сожгу записи. Или нет. Дай мне ночь.']]);
+    return;
+  }
+  const quick = {
+    ragna: [['Шин', 'Эй.'], ['Рагна', 'Что?'], ['Шин', 'Ничего не забыла?'], ['Рагна', 'Хм… да вроде ничего.'], ['Шин', 'За пивом сгоняй.'], ['Рагна', 'Нихрена себе ведьмак… Как победишь меня в гвинт — так и принесу.']],
+    ren: [['Рэн', 'Слушай. Когда он сказал «смена кончилась»… мне его стало жалко. Это нормально?'], ['Шин', 'Нормально.'], ['Рэн', 'А… тебе?'], ['Шин', 'Мне — работа.'], ['Рэн', 'Врёшь. Я видел твоё лицо.']],
+    li: [['Ли Сюэ', 'Двести четырнадцать. Я успела переписать сорок одно имя.'], ['Шин', 'Зачем?'], ['Ли Сюэ', 'Кто-то должен помнить хотя бы строчку.']],
+    yon: [['Йон', 'Брат ведьмак. Я молился за тебя внизу.'], ['Шин', 'Помогло?'], ['Йон', 'Ты жив. Значит, Господь слушал. Или ты быстрее Его.']],
+    gerv: [['Гервазий', 'Я видел за тобой тень, ведьмак. Там, у чана.'], ['Шин', 'Соль в глазах.'], ['Гервазий', 'Может быть. Но я ей пел.']]
+  };
+  if (quick[id]) await dialog(quick[id]);
+}
+async function keyDoorAct(o) {
+  if (!G.flags.talkedAll) { G.flags.talkedAll = true; }
+  const i = await choose('Порог старой сторожки', 'Ночь. До зари часа четыре. В кармане холодеет подковный гвоздь из серебра в инее — ключ, который Система дала за Псаря.', [['Вбить гвоздь в порог', 'войти одному'], ['Не сейчас']]);
+  if (i !== 0) return;
+  await dialog([['', 'Гвоздь входит в старое дерево, как в масло. На пороге проступает дверь из инея. Видит её только Шин.'], ['', 'Медальон Волка бьётся о грудь.']]);
+  await nextLevel();
+}
+async function turAct(o) {
+  if (G.flags.tur) { await dialog([['', 'Ведьмак Школы Волка во льду. Тур из Каэр Вольфа.']]); return; }
+  G.flags.tur = true;
+  await dialog([['', 'В хвосте колонны — ведьмак в старой куртке Школы Волка. Медальон на груди. Лёд вокруг настоящий: тело здесь.'], ['', 'На медальоне выцарапано: <em>«Тур. Каэр Вольф»</em>. Вереск искал его два года.'], ['', 'При нём записка на бересте: <em>«Тропа кончается там, где начинается Его поле»</em>.'], ['Эхо Тура', '…не Охота тут главная… они собирают нас раньше, чем соберёт Он…']]);
+  await sys(['[ Найдено ]', 'Чертёж «Улучшенная куртка Школы Волка»', 'Старый медальон Волка (Тур)']); G.xp += 40; refreshSense(); save();
+}
+async function yasliAct(o) {
+  if (G.flags.yasli) { await dialog([['', 'Загон пуст. Тропа взяла своё.']]); return; }
+  await dialog([['', 'Две клети на одной цепи с одним замком. На замке альвийская руна: <em>«одного за одного»</em>.'], ['', 'Ты забрал у тропы её хозяина. Тропа отдаёт одного взамен.'], ['Мальчик', 'Дядя… А мамка где? Я полдня тут сплю. <em>(в ледяной клети мальчишка лет девяти, в старой рубахе)</em>'], ['Мальчик', 'Я Мстиша. Из Ключей. А тебя как звать?']]);
+  const n = await choose('Мстиша', 'А тебя как звать?', [['«Шин»'], ['«Неважно, малой»']]);
+  if (n === 0) { G.flags.named = true; await dialog([['', '<em>Где-то на цепи далеко впереди звякнуло звено.</em>']]); }
+  await dialog([['Мстиша', 'А тот, с косой у тебя за плечом, твой? Он добрый. Он меня не берёт.'], ['Юный альв', 'Убийца хозяина. Выпусти щенка — и щенок ответит на три вопроса. Таков обычай. <em>(альв во второй клети смотрит прямо, без страха)</em>']]);
+  const i = await choose('Замок «одного за одного»', 'Кого выпустить?', [['Мстишу', 'мальчик вернётся домой; альв останется во льду'], ['Юного альва', 'долг жизни, три правдивых ответа; мальчик уснёт навсегда'], ['Обоих: «Касание» Жатвы на замок', 'Воля 7 + 2 против 11'], ['Никого', 'тропа возьмёт двойной залог']]);
+  G.flags.yasli = true;
+  if (i === 0) { G.flags.mstisha = true; await dialog([['', 'Клеть Мстиши тает. Вторая смыкается льдом.'], ['Мстиша', 'Дядя, а у меня сестрёнка Ядвига. Она маленькая ещё.'], ['', '<em>Сестре сорок шесть. Она в Слободе у дамбы. Мстиша этого пока не знает.</em>']]); }
+  if (i === 1) { G.flags.pup = true; await dialog([['Юный альв', 'Спрашивай, убийца. Три раза.'], ['Шин', 'Чего хочет Госпожа?'], ['Юный альв', 'Не мести. Песни и пути. И чтобы стёртого больше не было.']]); }
+  if (i === 2) { await sys(['[ «Касание» Жатвы: Воля 7 + 2 (Жатва II) = 9 против 11 ]', '[ Успех с ценой: обе клети открыты ]', '!Тропа заметила метку. Страж тропы сильнее. Воля −2 до выхода.']); G.flags.mstisha = G.flags.pup = true; G.flags.yasliBoth = true; G.flags.kortege = (G.flags.kortege || 0) + 1; }
+  if (i === 3) { G.flags.yasliNone = true; await dialog([['', 'Ты отходишь. Жерди расступаются сами. За спиной тихо, как в погребе.'], ['', '<em>Мстиша больше не спрашивает, где мамка.</em>']]); }
+  if (i !== 3) G.xp += 50;
+  L.objects.filter(g => g.gate).forEach(g => { g.gone = true; L.group.remove(g.mesh); });
+  refreshSense(); save();
+}
+async function stremDefeated() {
+  await dialog([['Стремянный', 'Брод… твой.'], ['', '<em>На дальнем берегу из тумана проступает межевой камень.</em>']]);
+  setTile(17, 5, '.'); setTile(18, 5, '.'); rebuildTiles();
+  await sys(['[ Мгновенное подземелье «Серебряная тропа» пройдено ]', '[ Условие F → E №3: зачистить мгновенное подземелье — 1/1 ]', '[ Камни силы C ×2 · Иней тропы · Мутаген «Стремянный» · Соль брода ×3 ]', '[ Звенья «Переклички» — ≈300 имён ]']);
+  G.xp += 200; refreshSense(); save();
+}
+async function stoneAct(o) {
+  await dialog([['', 'Межевой камень у самой границы, куда ключ не пускает. Надпись по-староэльфийски:'], ['', '<em>«Здесь кончается Охота. Дальше — Жнитва»</em>.'], ['', 'Под ней — фигура спиной, с косой. Лицо сколото.'], ['', 'Ты касаешься камня. Иней ложится узором твоей ладони. Медальон Волка впервые за всю тропу молчит.']]);
+  await ending();
+}
+
+/* ================= FLOW ================= */
+async function enterLevel(idx, fromDeath) {
+  if (C) { C.over = true; C = null; } if (turnResolve) { const r = turnResolve; turnResolve = null; r(); } $('#acts').hidden = true; $('#order').hidden = true;
+  G.lvl = idx; buildLevel(idx); updateHUD(); if (!fromDeath) { snapshotCP(); } save();
+  await fade(false);
+  const id = LEVELS[idx].id;
+  if (id === 'l0') {
+    await sys(['[ Срочное задание: Красные врата Гронека ]', '[ Условие: убить хозяина врат · Срок: до 14 листопада, 06:00 ]', '[ Скрытая цель: ??? ]', '[ Награда: 250 XP · 1 очко навыков · эхо хозяина ]']);
+    await barks([['ragna', 'Солью пахнет. И мертвечиной. Как дома на засолке.'], ['ren', 'Красные врата. Выход только через босса.'], ['li', 'Тяга идёт внутрь. Слышите?']], 1500);
+    hint('Касание по земле — идти. «Чутьё» показывает, где воздух стоит.');
+  }
+  if (id === 'l1') { await barks([['yon', 'Это часовня… Каторжане сами сложили алтарь.'], ['li', 'Воздух стоит по всему залу. Только у стен тянет.']], 1500); hint('Шахтёры слепые: идут на шум. Тихо обойди по краю.'); }
+  if (id === 'l2') { await barks([['yon', 'Тут Аардом нельзя, ведьмак. Своды на честном слове.'], ['ragna', 'Купаться в рассоле. Мечта всей жизни.'], ['li', 'Слышите? Кто-то поёт. Наверху, над водой.']], 1600); }
+  if (id === 'l3') { await barks([['ren', 'Вот он…'], ['ragna', 'Большой. Люблю больших. Падают громче.']], 1300); }
+  if (id === 'l4') { await sys(['[ Красные врата закрыты ]', '[ Гронек спасён ]']); hint('Поговори с людьми. Когда будешь готов — подойди к порогу старой сторожки.'); }
+  if (id === 'l5') { await sys(['[ Мгновенное подземелье: Серебряная тропа · Ранг C ]', '[ Допуск: носитель ]', '[ Время: 1 час здесь = 10 минут там ]', '[ Законы тропы: ]', '[ 1. Не сходи с серебра. ]', '[ 2. Не называй себя. ]', '[ 3. На тропе не отдыхают. ]', '[ Цель: пройти тропу до брода. Победить Стража. ]', '[ Условие 3: зачистить мгновенное подземелье — 0/1 ]']); hint('Энергия здесь не восстанавливается. Только на Привалах.'); }
+  if (id === 'l6') { L.triggers.push({ x1: 13, x2: 14, y1: 0, y2: 9, fn: columnSong }); hint('Ледяная колонна пленных. Погонщики уходят в туман — Ирден или лунная пыль их держат.'); }
+  if (id === 'l7') { hint('Плиты звенят под ногой. Чутьё покажет следы копыт.'); }
+  if (id === 'l8') { hint('Тропа упирается в загон.'); }
+  if (id === 'l9') { hint('Чёрная река течёт без звука. У брода ждёт Страж.'); }
+}
+async function columnSong() {
+  await dialog([['', 'Оттиски в колонне открывают рты и поют песню Охоты: <em>«домой, домой, по серебру…»</em>']]);
+  await sys(['[ Проверка: Воля 7 + 2 (Ловчий Охоты) против 9 → успех ]', '[ Песня не держит носителя ]']);
+}
+async function nextLevel() {
+  if (C) return; await fade(true);
+  G.hp = shin().hp; units.filter(u => u.team === 'party' && u.id !== 'shin').forEach(u => G.allies[u.id] = u.hp);
+  if (LEVELS[G.lvl].id === 'l4') { G.en = 14; G.hp = 39; } // night rest before the key
+  if (G.lvl + 1 >= LEVELS.length) return ending();
+  await enterLevel(G.lvl + 1);
+}
+async function ending() {
+  await fade(true); const t = $('#title');
+  t.querySelector('.in').innerHTML = '<h1><span>Конец первой арки</span>Поле</h1><p>«Здесь кончается Охота. Дальше — Жнитва».</p>' +
+    '<p>Опыт за арку: ' + G.xp + '. ' + (G.flags.gervAlive ? 'Гервазий жив. ' : 'Гервазий не вышел. ') + (G.flags.chainFreed ? 'Двести четырнадцать каторжан ушли домой. ' : '') + (G.flags.mstisha ? 'Мстиша возвращается к сестре. ' : '') + (G.flags.pup ? 'Юный альв должен тебе жизнь. ' : '') + '</p>' +
+    '<div class="acts"><button class="btn" id="bAgain">Начать заново</button></div>';
+  t.hidden = false; $('#fade').classList.remove('on');
+  $('#bAgain').onclick = () => { try { localStorage.removeItem(SAVE); } catch (e) {} location.reload(); };
+}
+
+/* ================= MAIN LOOP ================= */
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min(.05, (now - last) / 1000); last = now;
+  if (L) {
+    stepUnits(dt); stepParticles(dt);
+    const s = shin();
+    if (s) { camFocus.lerp(new THREE.Vector3(s.px, 0, s.pz), 1 - Math.pow(.002, dt)); }
+    const f = camFocus.clone().add(camPan);
+    camera.position.set(f.x + camDist * .18, camDist * .92, f.z + camDist * .62); camera.lookAt(f.x, 0, f.z - .4);
+    const y = unitById('yon') || s; if (y) { torch.position.set(y.px + .2, 1.6, y.pz); torch.intensity = (L.def.theme === 'salt' ? 1.25 : L.def.theme === 'night' ? 1.2 : 0) * (.9 + Math.random() * .12); }
+    if (s) aura.position.set(s.px, 1.5, s.pz);
+    // rings & tags
+    for (const u of units) {
+      if (u.mesh.userData.ring && C && C.units[C.idx] === u) u.mesh.userData.ring.material.opacity = .6 + Math.sin(now * .008) * .3;
+      if (!u.tag.hidden) { const p = toScreen(u.px, u.pz, 1.45 * (u.scale || 1)); u.tag.style.left = p.x + 'px'; u.tag.style.top = p.y + 'px'; u.tag.querySelector('.nm').textContent = u.name; u.tag.querySelector('.hb i').style.width = (100 * u.hp / u.maxHp) + '%';
+        const st = []; if (u.quen) st.push('Квен ' + u.quen); if (u.st.stun) st.push('оглушён'); if (u.st.charm) st.push('Аксий'); if (u.st.burn) st.push('горит'); if (u.st.fog) st.push('в тумане'); if (u.down) st.push('при смерти'); u.tag.querySelector('.st').textContent = st.join(' · '); }
+    }
+    for (let i = bubbles.length - 1; i >= 0; i--) { const b = bubbles[i]; if (now > b.until || !b.u.alive) { b.el.remove(); bubbles.splice(i, 1); continue; } const p = toScreen(b.u.px, b.u.pz, 2.1 * (b.u.scale || 1)); b.el.style.left = p.x + 'px'; b.el.style.top = p.y + 'px'; }
+    if (L.zones && L.zones.length) L.group.children.forEach(o => { if (o.userData.zone) o.rotation.z += dt; });
+  }
+  renderer.render(scene, camera);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+/* ================= BOOT ================= */
+$('#bSense').onclick = () => { ui.sense = !ui.sense; $('#bSense').classList.toggle('on', ui.sense); $('#bSense').setAttribute('aria-pressed', ui.sense); refreshSense(); if (ui.sense) hint(L && L.def.theme === 'salt' ? 'Чутьё: красным — мёртвый воздух, где бьют иглы. Жёлтым — то, что стоит осмотреть.' : 'Чутьё: следы, слабые места, то, что стоит осмотреть.'); };
+$('#bQuen').onclick = () => { if (!G || !L) return; const s = shin(); if (C) { if (turnResolve && !C.acted && G.en >= 2) onAct('quen'); return; } if (ui.busy || G.en < 2 || s.quen >= 2) return; G.en -= 2; s.quen = 2; G.quen = 2; floatText(s, 'Квен', '#ffd27a'); updateHUD(); };
+$('#bBag').onclick = () => { if (!G || !L) return; if (C) { if (turnResolve && !C.bonus) onAct('bag'); return; } if (!ui.busy) openBag(false); };
+$('#bMenu').onclick = async () => { if (ui.busy || !G || !L) return; const i = await choose('Меню', 'Опыт: ' + G.xp + ' · Уровень: ' + LEVELS[G.lvl].name, [['Продолжить'], ['Начать уровень заново'], ['Новая игра']]);
+  if (i === 1) { G = JSON.parse(JSON.stringify(G.cp)); snapshotCP(); C = null; $('#acts').hidden = true; $('#order').hidden = true; enterLevel(G.lvl, true); }
+  if (i === 2) { try { localStorage.removeItem(SAVE); } catch (e) {} location.reload(); } };
+function start(data) {
+  const saved = (data && data.G) || loadSave();
+  if (saved && saved.cp) $('#bCont').hidden = false;
+  $('#bNew').onclick = () => { G = freshGame(); $('#title').hidden = true; enterLevel(0); };
+  $('#bCont').onclick = () => { G = saved; $('#title').hidden = true; const cp = G.cp; G = JSON.parse(JSON.stringify(cp)); snapshotCP(); enterLevel(G.lvl, true); };
+}
+window.claude?.hot?.snapshot?.(() => ({ G }));
+window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+window.__dbg = { speed: v => SPEED = v, myTurn: () => !!turnResolve, walk: (x, y) => { const s = shin(); const p = astar(s, x, y, { passAllies: true, goalBlocked: true }); if (p) { if (p.length && unitAt(p[p.length - 1].x, p[p.length - 1].y, s)) p.pop(); s.queue = p; } return !!p; }, startCombat: g => startCombat(g), get G() { return G; }, enterLevel: i => { G = G || freshGame(); $('#title').hidden = true; return enterLevel(i); }, units, get C() { return C; }, get L() { return L; }, tap: (x, y) => C ? combatTap(x, y) : null, onAct, shin };
+})();
+</script>
