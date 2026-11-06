@@ -67,6 +67,7 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 #acts button.sel { border-color: var(--gold); background: #2a2416; }
 #acts button.end { border-color: #5a3a33; }
 #acts button:disabled { opacity: .35; }
+body.dlg .bottom { visibility: hidden; }
 #hint { font-size: 13px; color: var(--muted); text-align: center; text-shadow: 0 1px 2px #000; min-height: 18px; }
 
 /* dialogue sheet */
@@ -96,6 +97,8 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .screen p { margin: 0; color: var(--muted); line-height: 1.5; text-wrap: pretty; }
 .screen .acts { display: grid; gap: 8px; justify-items: center; }
 .screen .acts .btn { min-width: 220px; font-size: 16px; }
+.screen .acts .btn:disabled { opacity: .6; }
+.credit { font-size: 12px; color: var(--muted); }
 .screen .help { font-size: 14px; text-align: left; display: grid; gap: 4px; border-top: 1px solid var(--line); padding-top: 12px; }
 .screen .help b { color: var(--fg); font-weight: 500; }
 
@@ -166,6 +169,7 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
       <div><b>Перетаскивание</b> — сдвинуть камеру, <b>двумя пальцами</b> — приблизить.</div>
       <div><b>Чутьё</b> — ведьмачье чутьё: следы, тяга, слабые места. <b>Бой пошаговый:</b> движение, действие и одно быстрое действие (финт или зелье).</div>
     </div>
+    <p class="credit">3D-модели: KayKit (Kay Lousberg), CC0.</p>
   </div>
 </div>
 
@@ -174,9 +178,11 @@ function bootError(msg) { var t = document.getElementById('title'); if (!t) retu
 window.addEventListener('error', function (e) { bootError('Ошибка: ' + (e.message || e) + (e.lineno ? ' (строка ' + e.lineno + ')' : '')); });
 window.addEventListener('unhandledrejection', function (e) { bootError('Ошибка: ' + (e.reason && e.reason.message || e.reason)); });
 </script>
-<script src="three.min.js"></script>
+<script src="lib/three.min.js"></script>
 <script>if (!window.THREE) document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"><\/script>');</script>
 <script>if (!window.THREE) document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');</script>
+<script src="lib/GLTFLoader.js"></script>
+<script src="lib/SkeletonUtils.js"></script>
 <script>
 (() => {
 if (!window.THREE) { bootError('Не загрузилась библиотека 3D-графики (three.js). Проверь интернет и обнови страницу.'); return; }
@@ -206,13 +212,17 @@ function loadSave() { try { const s = localStorage.getItem(SAVE); return s ? JSO
 const canvas = $('#c');
 let renderer;
 try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true }); } catch (e) { bootError('Телефон не дал игре 3D-графику (WebGL). Попробуй открыть ссылку в Chrome или Safari, а не во встроенном окне приложения.'); return; }
-renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
+renderer.outputEncoding = THREE.sRGBEncoding; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.1;
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 200);
-let camDist = 17, camPan = new THREE.Vector3(), camFocus = new THREE.Vector3();
+let camDist = 13, camPan = new THREE.Vector3(), camFocus = new THREE.Vector3();
 const amb = new THREE.AmbientLight(0x56606a, 0.75); scene.add(amb);
 const hemi = new THREE.HemisphereLight(0x8fa2b4, 0x1a1512, 0.45); scene.add(hemi);
-const moon = new THREE.DirectionalLight(0xb9c7d6, 0.35); moon.position.set(-6, 14, 8); scene.add(moon);
+const moon = new THREE.DirectionalLight(0xc6d2e0, 0.55); moon.position.set(-6, 14, 8); scene.add(moon); scene.add(moon.target);
+moon.castShadow = true; moon.shadow.mapSize.set(1024, 1024); Object.assign(moon.shadow.camera, { left: -11, right: 11, top: 11, bottom: -11, near: 1, far: 40 }); moon.shadow.bias = -0.0015; moon.shadow.normalBias = 0.02;
+const torchPool = []; for (let i = 0; i < 4; i++) { const l = new THREE.PointLight(0xff9a3c, 0, 7.5, 1.7); scene.add(l); torchPool.push(l); }
 const torch = new THREE.PointLight(0xffa04a, 1.6, 11, 1.6); scene.add(torch);
 const aura = new THREE.PointLight(0x9fc3ff, 0.0, 9, 1.8); scene.add(aura);
 function resize() { const w = window.innerWidth, h = window.innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
@@ -232,7 +242,97 @@ const GEO = {
   cube: new THREE.BoxGeometry(1, 1, 1), cyl: new THREE.CylinderGeometry(.5, .5, 1, 14), sph: new THREE.SphereGeometry(.5, 14, 10), cone: new THREE.ConeGeometry(.5, 1, 10),
   hl: new THREE.PlaneGeometry(.92, .92)
 };
-const blobMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: .45, depthWrite: false });
+const blobMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: .35, depthWrite: false });
+
+/* ================= MODELS (KayKit, CC0) ================= */
+const LIB = {}; const LIBGEO = new Set();
+const CHAR_FILES = ['Rogue_Hooded', 'Rogue', 'Knight', 'Barbarian', 'Mage', 'Skeleton_Minion', 'Skeleton_Warrior', 'Skeleton_Rogue', 'Skeleton_Mage'];
+const PROP_FILES = ['floor_tile_small', 'floor_tile_small_broken_A', 'floor_tile_small_decorated', 'floor_dirt_small_A', 'floor_dirt_small_B', 'floor_foundation_allsides', 'torch_mounted', 'torch_lit', 'barrel_large', 'barrel_small_stack', 'crates_stacked', 'chest', 'pillar', 'column', 'rubble_half', 'candle_triple', 'table_small', 'keg', 'sword_shield_broken', 'trunk_large_A', 'wall_doorway', 'shelf_small_candles'];
+function loadAssets(onProg) {
+  return new Promise(res => {
+    if (!THREE.GLTFLoader || !THREE.SkeletonUtils) { res(false); return; }
+    const loader = new THREE.GLTFLoader();
+    const list = CHAR_FILES.concat(PROP_FILES);
+    let done = 0; const fin = () => { done++; onProg(done / list.length); if (done === list.length) res(true); };
+    const ok = (n, g) => { g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; LIBGEO.add(o.geometry); } }); LIB[n] = g; fin(); };
+    const fromB64 = b64 => { const bin = atob(b64); const u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u.buffer; };
+    let next = 0; const pump = () => { if (next >= list.length) return; const n = list[next++]; const sc = document.createElement('script'); sc.src = 'assets/js/' + n + '.js';
+      sc.onload = () => { const b = window.__GLB && window.__GLB[n]; if (!b) { LIB[n] = null; fin(); pump(); return; } try { loader.parse(fromB64(b), '', g => { delete window.__GLB[n]; ok(n, g); pump(); }, () => { LIB[n] = null; fin(); pump(); }); } catch (e) { LIB[n] = null; fin(); pump(); } };
+      sc.onerror = () => { LIB[n] = null; fin(); pump(); }; document.head.appendChild(sc); };
+    for (let i = 0; i < 4; i++) pump();
+  });
+}
+const PROTO = {};
+function protoGeo(name) {
+  if (PROTO[name] !== undefined) return PROTO[name];
+  const g = LIB[name]; let mesh = null; if (g) g.scene.traverse(o => { if (o.isMesh && !mesh) mesh = o; });
+  if (!mesh) return (PROTO[name] = null);
+  g.scene.updateMatrixWorld(true); const geo = mesh.geometry.clone(); geo.applyMatrix4(mesh.matrixWorld);
+  return (PROTO[name] = { geo, mat: mesh.material });
+}
+const WEAP_RE = /Sword|Shield|Axe|Crossbow|Knife|Throwable|Mug|Staff|Wand|Spellbook|Helmet|Hat/;
+const CHAR = {
+  shin: { m: 'Rogue_Hooded', desat: .9, tint: 0x8a8c96, give: [['Knight', '1H_Sword']] },
+  ren: { m: 'Knight', show: ['1H_Sword'], glow: '1H_Sword', tint: 0xb4bed8 },
+  li: { m: 'Rogue', show: ['1H_Crossbow'], tint: 0xc4d0b2 },
+  ragna: { m: 'Barbarian', show: ['2H_Axe', 'Barbarian_Hat'] },
+  yon: { m: 'Knight', show: ['1H_Sword', 'Round_Shield', 'Knight_Helmet'], tint: 0xa8a49c },
+  convict: { m: 'Skeleton_Minion', tint: 0xf6efe0 },
+  miner: { m: 'Skeleton_Rogue', tint: 0xffffff, give: [['Barbarian', '1H_Axe']] },
+  brother: { m: 'Skeleton_Warrior', tint: 0x5a4c4a, give: [['Knight', '1H_Sword']] },
+  drowned: { m: 'Skeleton_Minion', tint: 0x7fa8a0 },
+  antip: { m: 'Skeleton_Warrior', tint: 0xeee6d2, give: [['Barbarian', '2H_Axe']] },
+  solevar: { m: 'Skeleton_Warrior', tint: 0xfff8ea, emissive: 0x2a2010, give: [['Knight', '2H_Sword']] },
+  driver: { m: 'Skeleton_Rogue', tint: 0x7f90b0, emissive: 0x0f2238 },
+  mirror: { m: 'Rogue_Hooded', desat: 1, ghost: true, give: [['Knight', '1H_Sword']] },
+  strem: { m: 'Skeleton_Warrior', tint: 0xa8c4e0, emissive: 0x1a3550, give: [['Knight', '2H_Sword']] },
+  kassian: { m: 'Mage', tint: 0x5a5a5e }, gerv: { m: 'Knight', tint: 0x66666c }, gervTmp: { m: 'Knight', tint: 0x66666c }
+};
+function buildModel(cfg) {
+  const src = LIB[cfg.m]; if (!src) return null;
+  const root = THREE.SkeletonUtils.clone(src.scene);
+  root.traverse(o => {
+    if (!o.isMesh) return;
+    if (WEAP_RE.test(o.name) && !(cfg.show || []).includes(o.name)) { o.visible = false; return; }
+    o.material = o.material.clone(); o.castShadow = true; o.receiveShadow = false; o.frustumCulled = false;
+    if (cfg.desat && !WEAP_RE.test(o.name)) { const k = cfg.desat.toFixed(2); o.material.onBeforeCompile = sh => { sh.fragmentShader = sh.fragmentShader.replace('#include <map_fragment>', '#include <map_fragment>\n diffuseColor.rgb = mix(diffuseColor.rgb, vec3(dot(diffuseColor.rgb, vec3(.299,.587,.114))), ' + k + ');'); }; o.material.customProgramCacheKey = () => 'desat' + k; }
+    if (cfg.tint) o.material.color.multiply(new THREE.Color(cfg.tint));
+    if (cfg.emissive) o.material.emissive = new THREE.Color(cfg.emissive);
+    if (cfg.ghost) { o.material.transparent = true; o.material.opacity = .55; o.material.emissive = new THREE.Color(0x3a5f8a); o.material.depthWrite = false; }
+    if (cfg.glow && o.name === cfg.glow) { o.material.emissive = new THREE.Color(0xffc861); o.material.emissiveIntensity = 1.3; }
+  });
+  (cfg.give || []).forEach(([donor, name]) => { const d = LIB[donor]; if (!d) return; const w = d.scene.getObjectByName(name); if (!w || !w.parent) return; const slot = root.getObjectByName(w.parent.name); if (!slot) return; const c = w.clone(); c.visible = true; c.castShadow = true; slot.add(c); });
+  return root;
+}
+function play(u, name, o = {}) {
+  if (!u.mixer) return 0; const a = u.acts[name] || (o.alt && u.acts[o.alt]); if (!a) return 0;
+  const prev = u.curAct; if (prev === a && !o.once) return a.getClip().duration;
+  a.reset(); a.enabled = true; a.setEffectiveTimeScale(o.speed || 1); a.setEffectiveWeight(1);
+  if (o.once) { a.setLoop(THREE.LoopOnce, 1); a.clampWhenFinished = !!o.clamp; } else a.setLoop(THREE.LoopRepeat, Infinity);
+  a.play(); if (prev && prev !== a) prev.crossFadeTo(a, o.fade !== undefined ? o.fade : .18, false);
+  u.curAct = a; u.oneShot = (o.once && !o.clamp) ? performance.now() + a.getClip().duration / (o.speed || 1) * 1000 * .9 : 0;
+  return a.getClip().duration / (o.speed || 1);
+}
+function baseAnim(u) { if (!u.mixer || !u.alive || u.down) return; play(u, u.queue.length ? (u.moveSpeed > 3.2 ? 'Running_A' : 'Walking_A') : 'Idle'); }
+function attackAnim(u) {
+  if (u.id === 'li' || u.range > 2) return '1H_Ranged_Shoot';
+  if (u.id === 'ragna' || ['antip', 'solevar', 'strem'].includes(u.kind)) return '2H_Melee_Attack_Slice';
+  if (u.id === 'shin' || u.kind === 'mirror') return Math.random() < .5 ? '1H_Melee_Attack_Slice_Diagonal' : 'Dualwield_Melee_Attack_Slice';
+  return '1H_Melee_Attack_Chop';
+}
+function downPose(u) { if (u.mixer) play(u, 'Death_A', { once: true, clamp: true }); else u.mesh.userData.inner.rotation.z = 1.4; }
+function upPose(u) { if (u.mixer) { u.curAct = null; play(u, 'Idle'); } else u.mesh.userData.inner.rotation.z = 0; }
+function staticPose(name, cfg, clip, s) { // a posed, non-animated model (corpses)
+  const r = buildModel(Object.assign({ m: name }, cfg)); if (!r) return null; const mx = new THREE.AnimationMixer(r); const c = LIB[name].animations.find(a => a.name === clip);
+  if (c) { const a = mx.clipAction(c); a.setLoop(THREE.LoopOnce, 1); a.clampWhenFinished = true; a.play(); mx.update(c.duration - .01); }
+  r.scale.setScalar(s || .5); return r;
+}
+function modelProp(name, s = .5, o = {}) {
+  const g = LIB[name]; if (!g) return null; const c = g.scene.clone(); c.scale.setScalar(s);
+  c.traverse(m => { if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; if (o.tint || o.emissive) { m.material = m.material.clone(); if (o.tint) m.material.color.multiply(new THREE.Color(o.tint)); if (o.emissive) m.material.emissive = new THREE.Color(o.emissive); } } });
+  if (o.ry) c.rotation.y = o.ry; if (o.y) c.position.y = o.y; if (o.x) c.position.x = o.x; if (o.z) c.position.z = o.z; return c;
+}
+function hashN(x, y, k = 1) { return Math.abs(Math.sin(x * 127.1 + y * 311.7 + k * 74.7) * 43758.5453) % 1; }
 
 /* ================= UI helpers ================= */
 const ui = { busy: 0, sense: false };
@@ -259,19 +359,19 @@ async function barks(list, gap = 1500) { for (const [id, t] of list) { const u =
 
 function dialog(lines) { // [['Имя','текст'], ...]
   return new Promise(res => {
-    ui.busy++; const d = $('#dlg'); let i = 0;
+    ui.busy++; document.body.classList.add('dlg'); const d = $('#dlg'); let i = 0;
     const show = () => { const [n, t] = lines[i]; $('#dName').textContent = n || ''; $('#dText').innerHTML = t; $('#dCh').innerHTML = ''; $('#dTap').hidden = false; };
-    const next = e => { e.stopPropagation(); i++; if (i >= lines.length) { d.hidden = true; d.onclick = null; ui.busy--; res(); } else show(); };
+    const next = e => { e.stopPropagation(); i++; if (i >= lines.length) { d.hidden = true; d.onclick = null; ui.busy--; document.body.classList.remove('dlg'); res(); } else show(); };
     d.hidden = false; show(); d.onclick = next;
   });
 }
 function choose(name, text, opts) { // opts: [label, sublabel?, disabled?]
   return new Promise(res => {
-    ui.busy++; const d = $('#dlg'); d.hidden = false; d.onclick = null;
+    ui.busy++; document.body.classList.add('dlg'); const d = $('#dlg'); d.hidden = false; d.onclick = null;
     $('#dName').textContent = name || ''; $('#dText').innerHTML = text || ''; $('#dTap').hidden = true;
     const ch = $('#dCh'); ch.innerHTML = '';
     opts.forEach((o, i) => { const b = document.createElement('button'); b.innerHTML = o[0] + (o[1] ? '<br><small>' + o[1] + '</small>' : ''); if (o[2]) b.disabled = true;
-      b.onclick = e => { e.stopPropagation(); d.hidden = true; ch.innerHTML = ''; ui.busy--; res(i); }; ch.appendChild(b); });
+      b.onclick = e => { e.stopPropagation(); d.hidden = true; ch.innerHTML = ''; ui.busy--; document.body.classList.remove('dlg'); res(i); }; ch.appendChild(b); });
   });
 }
 function sys(lines, btn = 'Принять') {
@@ -512,6 +612,20 @@ function makeUnit(kind, x, y, over = {}) {
 }
 function buildFigure(u) {
   const g = new THREE.Group(); const lk = u.look || {}; const s = u.scale || 1;
+  const cfg = CHAR[u.id] || CHAR[u.kind];
+  const model = cfg && !lk.hound && buildModel(cfg);
+  if (model) {
+    const blob = new THREE.Mesh(GEO.blob, blobMat); blob.rotation.x = -Math.PI / 2; blob.position.y = .03; blob.scale.setScalar(s * .9); g.add(blob);
+    const ring = new THREE.Mesh(GEO.ring, new THREE.MeshBasicMaterial({ color: u.team === 'party' ? 0x7fa7c9 : u.team === 'enemy' ? 0xc0493a : 0xc9a35a, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide }));
+    ring.rotation.x = -Math.PI / 2; ring.position.y = .05; ring.scale.setScalar(s); g.add(ring); g.userData.ring = ring;
+    const inner = new THREE.Group(); inner.scale.setScalar(s); g.add(inner); g.userData.inner = inner;
+    model.scale.setScalar(.5); inner.add(model);
+    if (lk.rider) { const hm = mat(0x1f242b); const b = new THREE.Mesh(GEO.cube, hm); b.scale.set(.4, .42, .95); b.position.y = .45; inner.add(b); model.position.y = .45; g.userData.horseParts = [b];
+      for (const [lx, lz] of [[.15, .35], [-.15, .35], [.15, -.35], [-.15, -.35]]) { const l = new THREE.Mesh(GEO.cyl, hm); l.scale.set(.09, .45, .09); l.position.set(lx, .2, lz); inner.add(l); g.userData.horseParts.push(l); } }
+    u.mixer = new THREE.AnimationMixer(model); u.acts = {}; LIB[cfg.m].animations.forEach(c => u.acts[c.name] = u.mixer.clipAction(c));
+    u.curAct = null; play(u, 'Idle');
+    return g;
+  }
   const blob = new THREE.Mesh(GEO.blob, blobMat); blob.rotation.x = -Math.PI / 2; blob.position.y = .07; blob.scale.setScalar(s); g.add(blob);
   const ring = new THREE.Mesh(GEO.ring, new THREE.MeshBasicMaterial({ color: u.team === 'party' ? 0x7fa7c9 : u.team === 'enemy' ? 0xc0493a : 0xc9a35a, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide }));
   ring.rotation.x = -Math.PI / 2; ring.position.y = .08; ring.scale.setScalar(s); g.add(ring); g.userData.ring = ring;
@@ -549,13 +663,14 @@ function buildFigure(u) {
 }
 function killUnit(u) {
   u.alive = false; u.queue = [];
+  if (u.mixer) { play(u, 'Death_A', { once: true, clamp: true }); u.tag.hidden = true; if (u.team !== 'party') setTimeout(() => { if (!u.alive) u.mesh.visible = false; }, 2600); return; }
   const m = u.mesh; let t = 0; const iv = setInterval(() => { t += .08; m.userData.inner.rotation.z = Math.min(1.45, t * 1.6); m.userData.inner.position.y = -t * .1; if (t > 1) { clearInterval(iv); if (u.team !== 'party') m.visible = false; } }, 16);
   u.tag.hidden = true;
 }
 
 /* ---------- level build ---------- */
 function clearLevel() {
-  if (L) { scene.remove(L.group); L.group.traverse(o => { if (o.geometry && !Object.values(GEO).includes(o.geometry)) o.geometry.dispose(); }); }
+  if (L) { scene.remove(L.group); L.group.traverse(o => { if (o.geometry && !Object.values(GEO).includes(o.geometry) && !LIBGEO.has(o.geometry) && !o.userData.proto) o.geometry.dispose(); }); }
   units.forEach(u => u.tag.remove()); units.length = 0; tagsEl.innerHTML = ''; bubbles.length = 0;
 }
 function buildLevel(idx) {
@@ -573,8 +688,10 @@ function buildLevel(idx) {
   const T = def.theme;
   scene.background = new THREE.Color(T === 'path' ? 0x05070c : T === 'night' ? 0x07090c : 0x0b0c0d);
   scene.fog = new THREE.Fog(scene.background, 16, 34);
-  amb.intensity = T === 'path' ? .55 : .7; amb.color.set(T === 'path' ? 0x41506a : 0x56606a);
-  torch.intensity = T === 'salt' ? 1.6 : T === 'night' ? 1.2 : 0; aura.intensity = T === 'path' ? 1.1 : 0;
+  amb.intensity = T === 'path' ? .5 : T === 'night' ? .35 : .42; amb.color.set(T === 'path' ? 0x41506a : 0x56606a);
+  hemi.intensity = T === 'path' ? .5 : .32; moon.intensity = T === 'path' ? .75 : T === 'night' ? .6 : .38; moon.color.set(T === 'path' ? 0xa9c8ff : 0xc6d2e0);
+  torch.intensity = T === 'salt' ? 1.1 : T === 'night' ? 1.0 : 0; aura.intensity = T === 'path' ? 1.2 : 0;
+  scene.fog = new THREE.Fog(scene.background, 12, 30);
   drawTiles();
   // units & objects
   const s0 = spawns.find(s => s[0] === '@');
@@ -597,50 +714,87 @@ function freeAround(x, y, n) {
   return out;
 }
 let tileMeshes = [];
+function instanced(name, list, fn, o = {}) {
+  const pg = protoGeo(name); if (!pg || !list.length) return null;
+  const m = new THREE.InstancedMesh(pg.geo, o.mat || pg.mat, list.length); m.userData.proto = true; m.receiveShadow = true; m.castShadow = !!o.cast;
+  const m4 = new THREE.Matrix4(), col = new THREE.Color(); list.forEach((it, i) => { fn(it, m4, col); m.setMatrixAt(i, m4); if (o.color) { m.setColorAt(i, col); } });
+  m.instanceMatrix.needsUpdate = true; if (m.instanceColor) m.instanceColor.needsUpdate = true; L.group.add(m); return m;
+}
 function drawTiles() {
-  const T = L.def.theme; const floors = [], walls = [], crystals = [];
+  const T = L.def.theme; const floors = [], walls = [], crystals = [], water = [];
   for (let y = 0; y < L.h; y++) for (let x = 0; x < L.w; x++) {
     const c = L.g[y][x];
-    if (isPathTile(c)) floors.push([x, y, c]);
+    if (isPathTile(c)) { floors.push([x, y, c]); if (c === '~') water.push([x, y]); }
     else if (c === '#') { let near = false; for (const [dx, dy] of DIRS) if (isPathTile(tile(x + dx, y + dy))) near = true; if (near) walls.push([x, y]); }
     if (c === ',') crystals.push([x, y]);
   }
-  const fm = new THREE.InstancedMesh(GEO.tile, new THREE.MeshStandardMaterial({ roughness: .9, metalness: 0, emissive: T === 'path' ? 0x16283a : 0x000000, emissiveIntensity: T === 'path' ? .55 : 0 }), Math.max(1, floors.length));
-  const m4 = new THREE.Matrix4(), col = new THREE.Color();
-  floors.forEach(([x, y, c], i) => {
-    let yy = 0;
-    if (c === '~') yy = -.12;
-    m4.makeTranslation(x, yy - .05, y); fm.setMatrixAt(i, m4);
-    let hex = 0xa39b8a;
-    if (T === 'night') hex = 0x4c4a44;
-    if (c === ',') hex = 0x9c9483;
-    if (c === '~') hex = 0x16262b;
-    if (T === 'path') hex = c === '+' ? 0xa9c6e2 : c === '-' ? 0x5d7286 : 0x6c8499;
-    col.setHex(hex); col.offsetHSL(0, 0, (((x * 7 + y * 13) % 5) - 2) * .012); fm.setColorAt(i, col);
-  });
-  fm.instanceMatrix.needsUpdate = true; if (fm.instanceColor) fm.instanceColor.needsUpdate = true;
-  L.group.add(fm); L.floorMesh = fm; L.floorList = floors;
-  if (walls.length) {
-    const wm = new THREE.InstancedMesh(GEO.wall, mat(T === 'night' ? 0x2b2a28 : 0x4d4740), walls.length);
-    walls.forEach(([x, y], i) => { m4.makeTranslation(x, .55, y); wm.setMatrixAt(i, m4); col.setHex(T === 'night' ? 0x2b2a28 : 0x4d4740); col.offsetHSL(0, 0, ((x * 3 + y * 5) % 4) * .02); wm.setColorAt(i, col); });
-    wm.instanceMatrix.needsUpdate = true; if (wm.instanceColor) wm.instanceColor.needsUpdate = true; L.group.add(wm);
+  L.floorList = floors; L.lights = L.lights || [];
+  const useModels = !!protoGeo('floor_tile_small');
+  const q = new THREE.Quaternion(), V = (a, b, c) => new THREE.Vector3(a, b, c);
+  const floorTint = (x, y, c, col) => { let hex = 0xf0e8da; if (T === 'night') hex = 0x9a8f80; if (c === ',') hex = 0xfff8ee; if (c === '~') hex = 0x2a3c40; if (T === 'path') hex = c === '+' ? 0xd2e6ff : c === '-' ? 0x6f86a0 : 0x9fbad8; col.setHex(hex); col.offsetHSL(0, 0, (hashN(x, y) - .5) * .06); };
+  if (useModels) {
+    const groups = { a: [], b: [], c: [] };
+    floors.forEach(f => { const h = hashN(f[0], f[1], 3); (h < .12 ? groups.b : h < .2 ? groups.c : groups.a).push(f); });
+    const names = T === 'night' ? ['floor_dirt_small_A', 'floor_dirt_small_B', 'floor_dirt_small_A'] : ['floor_tile_small', 'floor_tile_small_broken_A', 'floor_tile_small_decorated'];
+    const fmat = protoGeo(names[0]).mat.clone(); if (T === 'path') { fmat.emissive = new THREE.Color(0x10243a); fmat.emissiveIntensity = 1; }
+    ['a', 'b', 'c'].forEach((k, i) => instanced(names[i], groups[k], ([x, y, c], m4, col) => { m4.compose(V(x, c === '~' ? -.32 : 0, y), q.setFromEuler(new THREE.Euler(0, Math.floor(hashN(x, y, 9) * 4) * Math.PI / 2, 0)), V(.5, .5, .5)); floorTint(x, y, c, col); }, { color: true, mat: fmat }));
+    if (water.length) { const wm = new THREE.InstancedMesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshStandardMaterial({ color: 0x1b3a40, roughness: .08, metalness: .4, transparent: true, opacity: .82 }), water.length); const m4 = new THREE.Matrix4(); water.forEach(([x, y], i) => { m4.compose(V(x, -.1, y), q.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0)), V(1.001, 1.001, 1)); wm.setMatrixAt(i, m4); }); wm.instanceMatrix.needsUpdate = true; wm.receiveShadow = true; L.group.add(wm); L.water = wm; }
+    if (walls.length && T !== 'path') {
+      const deco = [], block = [];
+      walls.forEach(([x, y]) => { const front = isPathTile(tile(x, y - 1)) && !isPathTile(tile(x, y + 1)); const r = hashN(x, y, 5); if (!front && r < .14) { deco.push([x, y]); return; } block.push([x, y, front]); });
+      if (deco.length) instanced('floor_tile_small', deco, ([x, y], m4, col) => { m4.compose(V(x, 0, y), q.set(0, 0, 0, 1), V(.5, .5, .5)); col.setHex(T === 'night' ? 0x8a8070 : 0xd8cfbd); }, { color: true, mat: protoGeo('floor_tile_small').mat });
+      const wmat = protoGeo('floor_foundation_allsides').mat.clone(); wmat.color.setHex(T === 'salt' ? 0xfff6e8 : 0xd0c4b0);
+      instanced('floor_foundation_allsides', block, ([x, y, front], m4, col) => { m4.compose(V(x, 0, y), q.set(0, 0, 0, 1), V(.455, front ? .14 : .62, .455)); col.setHex(T === 'night' ? 0x8a8070 : 0xf2eadb); col.offsetHSL(0, 0, (hashN(x, y, 2) - .5) * .08); }, { color: true, mat: wmat, cast: true });
+      deco.forEach(([x, y]) => { const r = hashN(x, y, 7); const name = T === 'night' ? (r < .5 ? 'crates_stacked' : 'barrel_small_stack') : (r < .25 ? 'barrel_large' : r < .45 ? 'crates_stacked' : r < .62 ? 'barrel_small_stack' : r < .8 ? 'keg' : 'sword_shield_broken');
+        let fx = 0, fz = 0; for (const [dx, dy] of DIRS.slice(0, 4)) if (isPathTile(tile(x + dx, y + dy))) { fx = dx; fz = dy; break; }
+        const pm = modelProp(name, name === 'crates_stacked' ? .3 : .34, { tint: T === 'salt' ? 0xe8e0d0 : null, ry: hashN(x, y, 8) * 6.28 }); if (pm) { pm.position.set(x - fx * .1, 0, y - fz * .1); pm.userData.wallDeco = true; L.group.add(pm); } });
+      // wall torches
+      let k = 0; walls.forEach(([x, y]) => { const front = isPathTile(tile(x, y - 1)); if (front) return; let dir = null; for (const [dx, dy] of DIRS.slice(0, 4)) if (isPathTile(tile(x + dx, y + dy))) { dir = [dx, dy]; break; } if (!dir || hashN(x, y, 11) > .22) return; if (k++ > 14) return;
+        const t = modelProp('torch_mounted', .55, { ry: Math.atan2(dir[0], dir[1]) }); if (!t) return; t.position.set(x + dir[0] * .5, .95, y + dir[1] * .5); L.group.add(t);
+        const fl = new THREE.Mesh(GEO.cone, new THREE.MeshBasicMaterial({ color: 0xffb453 })); fl.scale.set(.08, .18, .08); fl.position.set(x + dir[0] * .72, 1.38, y + dir[1] * .72); fl.userData.flame = true; L.group.add(fl);
+        L.lights.push({ x: x + dir[0] * .9, y: 1.5, z: y + dir[1] * .9, c: 0xff9a3c }); });
+    }
+  } else {
+    const fm = new THREE.InstancedMesh(GEO.tile, new THREE.MeshStandardMaterial({ roughness: .9 }), Math.max(1, floors.length)); const m4 = new THREE.Matrix4(), col = new THREE.Color();
+    floors.forEach(([x, y, c], i) => { m4.makeTranslation(x, (c === '~' ? -.12 : 0) - .05, y); fm.setMatrixAt(i, m4); floorTint(x, y, c, col); col.multiplyScalar(.7); fm.setColorAt(i, col); });
+    fm.instanceMatrix.needsUpdate = true; if (fm.instanceColor) fm.instanceColor.needsUpdate = true; fm.receiveShadow = true; L.group.add(fm);
+    if (walls.length) { const wm = new THREE.InstancedMesh(GEO.wall, mat(0x4d4740), walls.length); walls.forEach(([x, y], i) => { m4.makeTranslation(x, .55, y); wm.setMatrixAt(i, m4); }); wm.instanceMatrix.needsUpdate = true; L.group.add(wm); }
   }
   if (crystals.length) {
-    const cm = new THREE.InstancedMesh(GEO.crystal, mat(0xf4efe2, { emissive: 0x332e26, emissiveIntensity: .4 }), crystals.length * 3);
-    let k = 0; crystals.forEach(([x, y]) => { for (let j = 0; j < 3; j++) { const ox = ((x * 31 + y * 17 + j * 11) % 9) / 10 - .4, oz = ((x * 13 + y * 29 + j * 7) % 9) / 10 - .4; const q = new THREE.Quaternion().setFromEuler(new THREE.Euler(ox * .6, 0, oz * .6)); m4.compose(new THREE.Vector3(x + ox, .12, y + oz), q, new THREE.Vector3(1, .7 + j * .25, 1)); cm.setMatrixAt(k++, m4); } });
+    const cm = new THREE.InstancedMesh(GEO.crystal, mat(0xfbf6ea, { emissive: 0x3a332a, emissiveIntensity: .5, roughness: .3, metalness: .1 }), crystals.length * 3); cm.castShadow = true;
+    const m4 = new THREE.Matrix4(); let k = 0; crystals.forEach(([x, y]) => { for (let j = 0; j < 3; j++) { const ox = hashN(x, y, j) * .8 - .4, oz = hashN(y, x, j + 3) * .8 - .4; m4.compose(V(x + ox, .1, y + oz), q.setFromEuler(new THREE.Euler(ox * .6, 0, oz * .6)), V(1, .7 + j * .25, 1)); cm.setMatrixAt(k++, m4); } });
     cm.instanceMatrix.needsUpdate = true; L.group.add(cm); L.crystalMesh = cm;
   }
-  if (T === 'path') { // hoof decals on '='
-    floors.filter(f => f[2] === '=').forEach(([x, y]) => { const r = new THREE.Mesh(new THREE.TorusGeometry(.16, .035, 6, 14, Math.PI * 1.4), new THREE.MeshBasicMaterial({ color: 0x2c4a63 })); r.rotation.x = -Math.PI / 2; r.position.set(x, .02, y); L.group.add(r); L.marks.push(r); });
+  if (T === 'path') {
+    floors.filter(f => f[2] === '=').forEach(([x, y]) => { const r = new THREE.Mesh(new THREE.TorusGeometry(.16, .035, 6, 14, Math.PI * 1.4), new THREE.MeshBasicMaterial({ color: 0x2c4a63 })); r.rotation.x = -Math.PI / 2; r.position.set(x, .06, y); L.group.add(r); L.marks.push(r); });
   }
 }
 function setTile(x, y, c) { L.g[y][x] = c; }
-function rebuildTiles() { L.group.children.filter(o => o.isInstancedMesh).forEach(o => L.group.remove(o)); L.marks.forEach(m => L.group.remove(m)); L.marks = []; drawTiles(); computeFlow(); refreshSense(); }
+function rebuildTiles() { L.lights = []; L.group.children.filter(o => o.isInstancedMesh || o.userData.flame || o.userData.wallDeco).forEach(o => L.group.remove(o)); L.marks.forEach(m => L.group.remove(m)); L.marks = []; drawTiles(); computeFlow(); refreshSense(); }
 
 /* ---------- objects ---------- */
 function addObj(o) { o.mesh && L.group.add(o.mesh); L.objects.push(o); return o; }
 function propMesh(kind) {
-  const g = new THREE.Group(); const add = (geo, m, sx, sy, sz, px, py, pz, rx = 0, ry = 0) => { const me = new THREE.Mesh(geo, m); me.scale.set(sx, sy, sz); me.position.set(px, py, pz); me.rotation.set(rx, ry, 0); g.add(me); return me; };
+  const g = new THREE.Group(); const add = (geo, m, sx, sy, sz, px, py, pz, rx = 0, ry = 0) => { const me = new THREE.Mesh(geo, m); me.scale.set(sx, sy, sz); me.position.set(px, py, pz); me.rotation.set(rx, ry, 0); me.castShadow = true; g.add(me); return me; };
+  const M = (name, s, o) => { const m = modelProp(name, s, o); if (m) g.add(m); return m; };
+  if (LIB.chest) {
+    let done = true;
+    switch (kind) {
+      case 'altar': M('table_small', .7, { tint: 0xf0e6d4 }); M('candle_triple', .55, { y: .7 }); g.userData.light = 0xffb45a; break;
+      case 'loot': M('chest', .42, { ry: Math.PI }); break;
+      case 'rest': M('trunk_large_A', .4, { tint: 0x9a8f80 }); M('candle_triple', .5, { y: .4 }); g.userData.light = 0xffa04a; break;
+      case 'restblue': M('column', .55, { tint: 0x9fc3ff, emissive: 0x16304a }); add(GEO.cone, mat(0x9fd0ff, { emissive: 0x4f9fff, emissiveIntensity: 1.6 }), .25, .4, .25, 0, .95, 0); g.userData.light = 0x6fb0ff; break;
+      case 'exit': case 'door': M('wall_doorway', .3, { tint: kind === 'exit' ? 0xd8cfbd : 0x9a8a78 }); add(GEO.cube, new THREE.MeshBasicMaterial({ color: 0x050303 }), .55, .9, .05, 0, .45, 0); break;
+      case 'cauldron': M('barrel_large', .48, { tint: 0x7a746c }); add(GEO.cyl, mat(0xfbf4e4, { emissive: 0x2a2418 }), .76, .04, .76, 0, .98, 0); break;
+      case 'body': { const r = staticPose('Skeleton_Warrior', { tint: 0x5a4c4a }, 'Death_A', .5); if (r) g.add(r); else done = false; break; }
+      case 'corpse': { const r = staticPose('Skeleton_Minion', { tint: 0xf6efe0 }, 'Death_A', .5); if (r) g.add(r); else done = false; break; }
+      case 'sign': M('column', .4, { tint: 0xd8cfbd }); add(GEO.cone, mat(0xc0402c, { emissive: 0x501008 }), .2, .3, .05, 0, .75, 0); break;
+      case 'brazier': M('column', .45, { tint: 0x8fb0d8 }); add(GEO.cone, mat(0x9fd0ff, { emissive: 0x4f9fff, emissiveIntensity: 1.8 }), .35, .6, .35, 0, .95, 0); g.userData.light = 0x6fb0ff; break;
+      case 'hook': M('pillar', .1, { tint: 0x8a8278 }); add(GEO.cube, mat(0x5a524a), .8, .1, .1, .35, .45, 0); break;
+      default: done = false;
+    }
+    if (done) return g;
+  }
   switch (kind) {
     case 'altar': add(GEO.cube, mat(0xe5dccb), .9, .7, .6, 0, .35, 0); for (let i = -1; i <= 1; i++) { add(GEO.cyl, mat(0xf1e6c8), .06, .18, .06, i * .25, .79, 0); add(GEO.cone, mat(0xffcf73, { emissive: 0xff9c2a, emissiveIntensity: 1.3 }), .05, .1, .05, i * .25 + .02 * (2 - i), .93, 0, 0, 0); } break;
     case 'damper': add(GEO.cube, mat(0x5a5248), .7, .9, .25, 0, .45, -.3); add(GEO.cube, mat(0x8a7f70, { metalness: .4 }), .5, .5, .06, 0, .5, -.15); break;
@@ -669,7 +823,10 @@ function propMesh(kind) {
   }
   return g;
 }
-function makeProp(kind, x, y, o) { const m = propMesh(kind); m.position.set(x, 0, y); return addObj(Object.assign({ x, y, kind, mesh: m, block: true }, o)); }
+function makeProp(kind, x, y, o) { const m = propMesh(kind); m.position.set(x, 0, y);
+  if (kind === 'exit' || kind === 'door') { const vert = !isPathTile(tile(x - 1, y)) && !isPathTile(tile(x + 1, y)); m.rotation.y = vert ? 0 : Math.PI / 2; if (!vert && !isPathTile(tile(x + 1, y))) m.position.x = x + .3; }
+  if (m.userData.light) L.lights.push({ x, y: 1.3, z: y, c: m.userData.light });
+  return addObj(Object.assign({ x, y, kind, mesh: m, block: true }, o)); }
 function npcUnit(id, name, x, y, look) { return makeUnit('npc', x, y, { id, name, look, team: 'neutral' }); }
 
 function spawnThing(c, x, y) {
@@ -795,9 +952,9 @@ function harm(src, tgt, amount, o = {}) {
   if (tgt.quen > 0 && !o.pierceQuen) { tgt.quen--; floatText(tgt, 'Квен', '#ffd27a'); if (tgt === shin()) { G.quen = tgt.quen; updateHUD(); } return 0; }
   let d = amount; if (!o.fire && !o.trap) d = Math.max(1, d - (o.armor !== undefined ? o.armor : tgt.armor));
   if (o.fire) d = Math.max(1, d - Math.floor(tgt.armor / 2));
-  tgt.hp = Math.max(0, tgt.hp - d); floatText(tgt, '−' + d, tgt.team === 'party' ? '#ff8f80' : '#fff');
+  tgt.hp = Math.max(0, tgt.hp - d); floatText(tgt, '−' + d, tgt.team === 'party' ? '#ff8f80' : '#fff'); if (tgt.hp > 0 && tgt.mixer) play(tgt, 'Hit_A', { once: true, speed: 1.4 });
   if (tgt === shin()) { G.hp = tgt.hp; updateHUD(); }
-  if (tgt.hp <= 0) { if (tgt.team === 'party') { if (tgt === shin()) { tgt.down = true; } else { tgt.down = true; floatText(tgt, 'при смерти', '#ff8f80'); tgt.mesh.userData.inner.rotation.z = 1.4; } } else { killUnit(tgt); onKill(tgt); } }
+  if (tgt.hp <= 0) { if (tgt.team === 'party') { if (tgt === shin()) { tgt.down = true; downPose(tgt); } else { tgt.down = true; floatText(tgt, 'при смерти', '#ff8f80'); downPose(tgt); } } else { killUnit(tgt); onKill(tgt); } }
   return d;
 }
 function onKill(u) {
@@ -822,6 +979,7 @@ function atkResolve(a, t, mult = 1, opts = {}) {
 async function lunge(a, t) {
   const m = a.mesh; const dx = t.x - a.x, dz = t.y - a.y; const len = Math.hypot(dx, dz) || 1;
   m.rotation.y = Math.atan2(dx, dz);
+  if (a.mixer) { const d = play(a, attackAnim(a), { once: true, speed: 1.35 }); await sleep(Math.max(200, Math.min(520, d * 1000 * .5))); return; }
   for (let i = 0; i <= 6; i++) { const k = Math.sin(i / 6 * Math.PI) * .32; m.position.x = a.px + dx / len * k; m.position.z = a.pz + dz / len * k; await sleep(16); }
 }
 async function meleeAttack(a, t, opts = {}) {
@@ -835,7 +993,11 @@ async function meleeAttack(a, t, opts = {}) {
   }
   if (!opts.quiet) shinNoiseVolley(a);
 }
-function rangedHit(a, t, opts = {}) { const r = atkResolve(a, t, 1, opts); harm(a, t, r.dmg, { armor: r.armor }); }
+function arrowFX(a, t) {
+  const m = new THREE.Mesh(GEO.cube, new THREE.MeshBasicMaterial({ color: 0xe8dcc0 })); m.scale.set(.03, .03, .45); L.group.add(m);
+  let k = 0; const iv = setInterval(() => { k += .12; m.position.set(a.px + (t.px - a.px) * k, .7, a.pz + (t.pz - a.pz) * k); m.lookAt(t.px, .7, t.pz); if (k >= 1) { clearInterval(iv); L.group.remove(m); } }, 16);
+}
+function rangedHit(a, t, opts = {}) { if (a.mixer) { a.mesh.rotation.y = Math.atan2(t.x - a.x, t.y - a.y); play(a, '1H_Ranged_Shoot', { once: true, speed: 1.3 }); arrowFX(a, t); } const r = atkResolve(a, t, 1, opts); harm(a, t, r.dmg, { armor: r.armor }); }
 
 async function startCombat(group) {
   if (C) return; const s = shin(); s.queue = []; await waitIdle();
@@ -903,7 +1065,7 @@ async function endCombat(res) {
   const c = C; C = null; units.forEach(u => { u.tag.hidden = true; const r = u.mesh.userData.ring; if (r) r.material.opacity = 0; u.st = {}; if (u.hiddenUnit) { u.hiddenUnit = false; } u.mesh.visible = u.alive || u.team === 'party'; });
   L.zones = []; drawZones();
   if (res === 'lose') return defeat();
-  units.filter(u => u.team === 'party' && u.down).forEach(u => { u.down = false; u.hp = Math.max(1, Math.round(u.maxHp * .25)); u.mesh.userData.inner.rotation.z = 0; });
+  units.filter(u => u.team === 'party' && u.down).forEach(u => { u.down = false; u.hp = Math.max(1, Math.round(u.maxHp * .25)); upPose(u); });
   units.filter(u => u.team === 'party' && u.id !== 'shin').forEach(u => G.allies[u.id] = u.hp);
   G.xp += c.xp; if (c.xp) log('Опыт +' + c.xp + '.');
   updateHUD(); save();
@@ -1003,7 +1165,7 @@ async function combatTap(x, y) {
 }
 function afterShinMoveInCombat() { const s = shin(); if (L.def.ch === 2) checkFall(s); }
 async function castSign(sel, x, y) {
-  const s = shin(); const petri = s.st.petri ? 1.5 : 1;
+  const s = shin(); if (s.mixer) { s.mesh.rotation.y = Math.atan2(x - s.x, y - s.y); play(s, 'Spellcast_Shoot', { once: true, speed: 1.5, alt: 'Interact' }); } const petri = s.st.petri ? 1.5 : 1;
   if (sel === 'aard') {
     if (Math.max(Math.abs(x - s.x), Math.abs(y - s.y)) > 2 || (x === s.x && y === s.y)) { hint('Аард бьёт на 1–2 клетки от Шина.'); return; }
     G.en -= 2; C.acted = true; const ang = Math.atan2(y - s.y, x - s.x);
@@ -1080,7 +1242,7 @@ async function basicMelee(u) {
 async function allyTurn(u) {
   const s = shin();
   if (u.id === 'yon') { const hurt = units.filter(o => o.team === 'party' && o.alive && (o.down || o.hp < o.maxHp * .5)).sort((a, b) => a.hp - b.hp)[0];
-    if (hurt && !C.yonHeal) { if (await approach(u, hurt)) { C.yonHeal = true; if (hurt.down) { hurt.down = false; hurt.mesh.userData.inner.rotation.z = 0; } hurt.hp = Math.min(hurt.maxHp, hurt.hp + 10); floatText(hurt, '+10', '#9fe0a0'); if (hurt === s) { G.hp = s.hp; updateHUD(); } log('Йон перевязывает: ' + hurt.name + '.'); return; } } }
+    if (hurt && !C.yonHeal) { if (await approach(u, hurt)) { C.yonHeal = true; if (hurt.down) { hurt.down = false; upPose(hurt); } if (u.mixer) play(u, 'Interact', { once: true }); hurt.hp = Math.min(hurt.maxHp, hurt.hp + 10); floatText(hurt, '+10', '#9fe0a0'); if (hurt === s) { G.hp = s.hp; updateHUD(); } log('Йон перевязывает: ' + hurt.name + '.'); return; } } }
   if (u.id === 'li') { const foes = enemiesOf(u).filter(o => dst(u, o) <= 8); if (C.round % 3 === 0 && foes.length >= 2) { log('Ли Сюэ: «Град»!'); foes.slice(0, 3).forEach(f => rangedHit(u, f)); return; }
     const t = foes.sort((a, b) => (b.boss ? 1 : 0) - (a.boss ? 1 : 0) || a.hp - b.hp)[0]; if (t) { u.mesh.rotation.y = Math.atan2(t.x - u.x, t.y - u.y); rangedHit(u, t); return; } const n = nearestFoe(u); if (n) await approach(u, n, 7); return; }
   const t = u.id === 'ren' ? (nearestFoe(u, o => o.boss || o.elite) || nearestFoe(u)) : nearestFoe(u);
@@ -1193,7 +1355,7 @@ async function stremTurn(b) {
 async function stremPhase2(b) {
   log('Стремянный рвёт себя из седла.'); const sp = freeAround(b.x, b.y, 1)[0];
   if (sp) { const h = makeUnit('horse', sp.x, sp.y, { group: 'boss' }); h.tag.hidden = false; C.units.splice(C.idx + 1, 0, h); }
-  b.look = {}; b.mesh.userData.inner.children.slice(0, 6).forEach(m => m.visible = false); b.speed = 4;
+  b.look = {}; (b.mesh.userData.horseParts || b.mesh.userData.inner.children.slice(0, 6)).forEach(m => m.visible = false); if (b.mixer) b.mesh.userData.inner.children.forEach(c => { if (c.isObject3D && !c.isMesh) c.position.y = 0; }); b.speed = 4;
   await sleep(300);
   await dialog([['', '<em>Голубой огонь жаровни впервые на тропе отбрасывает тень Шина. Тень выше его. В капюшоне. С косой на плече.</em>'], ['Стремянный', 'Жнитва… Ты не добыча. Ты — поле.']]);
   await sys(['[ Класс: — (ск██т) ]', '!█ ошибка синхронизации █'], 'Дальше');
@@ -1229,11 +1391,13 @@ function waitIdle() { return new Promise(res => { const ch = () => { if (units.e
 function stepUnits(dt) {
   for (const u of units) {
     if (!u.queue.length) continue;
+    if (u.mixer && !u.oneShot && u.alive && !u.down) play(u, (u.moveSpeed || 4.2) > 3.2 ? 'Running_A' : 'Walking_A');
     const n = u.queue[0]; const dx = n.x - u.px, dz = n.y - u.pz; const d = Math.hypot(dx, dz); const sp = (u.moveSpeed || 4.2) * dt / SPEED;
     if (d > .001) u.mesh.rotation.y = Math.atan2(dx, dz);
     if (d <= sp) {
       u.prev = { x: u.x, y: u.y }; u.px = n.x; u.pz = n.y; u.x = n.x; u.y = n.y; u.queue.shift();
       if (u === shin() && !C) onShinStep(u);
+      if (!u.queue.length && u.mixer && !u.oneShot) baseAnim(u);
       if (!u.queue.length && u.onDone) { const f = u.onDone; u.onDone = null; f(); }
     } else { u.px += dx / d * sp; u.pz += dz / d * sp; }
     u.mesh.position.set(u.px, tile(Math.round(u.px), Math.round(u.pz)) === '~' ? -.18 : 0, u.pz);
@@ -1398,7 +1562,7 @@ async function afterCombat(c) {
   if (L.def.id === 'l0') { await barks([['ragna', 'Ведьмак, ты хоть вспотел?'], ['ren', 'Ты их… как в замедленной съёмке.']], 1500); }
   if (L.def.id === 'l1') {
     if (!G.flags.brothersRest && !G.flags.brothersRose) { G.flags.brothersRose = true; await dialog([['', '<em>Тела у алтаря шевелятся. Соль хрустит в суставах. Мёртвые братья поднимаются и запевают ломаный гимн.</em>'], ['Йон', 'Нет… Братья…']]);
-      L.objects.filter(b => b.brother).forEach(b => { b.gone = true; L.group.remove(b.mesh); makeUnit('brother', b.x, b.y, { group: 'risen' }); }); refreshSense(); startCombat('risen'); return; }
+      L.objects.filter(b => b.brother).forEach(b => { b.gone = true; L.group.remove(b.mesh); { const r = makeUnit('brother', b.x, b.y, { group: 'risen' }); if (r.mixer) play(r, 'Skeletons_Awaken_Floor', { once: true }); } }); refreshSense(); startCombat('risen'); return; }
     if (G.flags.brothersRose && !G.flags.brothersRest) { G.flags.brothersRest = true; await barks([['yon', 'Простите нас, братья.']]); }
     checkChapelDone();
   }
@@ -1555,7 +1719,12 @@ function frame(now) {
     if (s) { camFocus.lerp(new THREE.Vector3(s.px, 0, s.pz), 1 - Math.pow(.002, dt)); }
     const f = camFocus.clone().add(camPan);
     camera.position.set(f.x + camDist * .18, camDist * .92, f.z + camDist * .62); camera.lookAt(f.x, 0, f.z - .4);
-    const y = unitById('yon') || s; if (y) { torch.position.set(y.px + .2, 1.6, y.pz); torch.intensity = (L.def.theme === 'salt' ? 1.25 : L.def.theme === 'night' ? 1.2 : 0) * (.9 + Math.random() * .12); }
+    const y = unitById('yon') || s; if (y) { torch.position.set(y.px + .2, 1.6, y.pz); torch.intensity = (L.def.theme === 'salt' ? 1.0 : L.def.theme === 'night' ? .9 : 0) * (.9 + Math.random() * .12); }
+    for (const u of units) if (u.mixer) { u.mixer.update(dt / SPEED); if (u.oneShot && now > u.oneShot) { u.oneShot = 0; baseAnim(u); } }
+    moon.position.set(f.x - 6, 14, f.z + 8); moon.target.position.set(f.x, 0, f.z);
+    if (L.lights && L.lights.length) { if (!L.lightT || now - L.lightT > 300) { L.lightT = now; const near = L.lights.slice().sort((a, b) => Math.hypot(a.x - f.x, a.z - f.z) - Math.hypot(b.x - f.x, b.z - f.z)); torchPool.forEach((l, i) => { const t = near[i]; if (t) { l.position.set(t.x, t.y, t.z); l.color.setHex(t.c); l.userData.on = 1; } else l.userData.on = 0; }); } }
+    else torchPool.forEach(l => l.userData.on = 0);
+    torchPool.forEach((l, i) => { l.intensity = l.userData.on ? 1.5 * (.85 + Math.sin(now * .011 + i * 1.7) * .08 + Math.random() * .07) : 0; });
     if (s) aura.position.set(s.px, 1.5, s.pz);
     // rings & tags
     for (const u of units) {
@@ -1581,6 +1750,8 @@ $('#bMenu').onclick = async () => { if (ui.busy || !G || !L) return; const i = a
 function start(data) {
   const saved = (data && data.G) || loadSave();
   if (saved && saved.cp) $('#bCont').hidden = false;
+  const bn = $('#bNew'), bc = $('#bCont'); bn.disabled = bc.disabled = true; bn.textContent = 'Загрузка…';
+  loadAssets(p => { bn.textContent = 'Загрузка ' + Math.round(p * 100) + '%'; }).then(() => { bn.disabled = bc.disabled = false; bn.textContent = 'Новая игра'; });
   $('#bNew').onclick = () => { G = freshGame(); $('#title').hidden = true; enterLevel(0); };
   $('#bCont').onclick = () => { G = saved; $('#title').hidden = true; const cp = G.cp; G = JSON.parse(JSON.stringify(cp)); snapshotCP(); enterLevel(G.lvl, true); };
 }
