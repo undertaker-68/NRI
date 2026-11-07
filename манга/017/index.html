@@ -1,0 +1,62 @@
+<title>Соляной склеп</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya+SC:wght@500;700&family=Alegreya+Sans:wght@400;500&display=swap">
+<style>
+/* Layout: single dark reading column; title card, then pages stacked edge to edge, sticky slim page counter */
+:root {
+  --bg: #0d0c0b;
+  --panel: #171513;
+  --fg: #ece5d8;
+  --muted: #9a9186;
+  --blood: #b8392c;
+  --salt: #f2ead9;
+  --display: "Alegreya SC", "Palatino Linotype", Georgia, serif;
+  --body: "Alegreya Sans", "Segoe UI", system-ui, sans-serif;
+  color-scheme: dark;
+}
+html, body { background: var(--bg); color: var(--fg); }
+body { font-family: var(--body); margin: 0; padding-left: max(0px, env(safe-area-inset-left, 0px)); padding-right: max(0px, env(safe-area-inset-right, 0px)); }
+.cover { min-height: 70vh; display: grid; place-items: center; text-align: center; padding: 48px max(16px, env(safe-area-inset-left, 0px)); background: radial-gradient(ellipse at 50% 20%, #2a1612 0%, #0d0c0b 70%); }
+.cover .in { max-width: 560px; display: grid; gap: 14px; }
+.cover .kick { font-family: var(--display); letter-spacing: .24em; color: var(--blood); font-size: 14px; text-transform: uppercase; }
+.cover h1 { font-family: var(--display); font-size: clamp(40px, 11vw, 76px); line-height: .95; margin: 0; color: var(--salt); text-wrap: balance; }
+.cover p { margin: 0; color: var(--muted); line-height: 1.5; text-wrap: pretty; }
+.cover .start { display: inline-block; justify-self: center; margin-top: 8px; padding: 12px 22px; border: 1px solid #4a3a33; color: var(--fg); text-decoration: none; font-family: var(--display); letter-spacing: .08em; }
+.pages { display: grid; gap: 10px; max-width: 900px; margin: 0 auto; padding-block: 12px 40px; }
+.pages figure { margin: 0; position: relative; background: var(--panel); aspect-ratio: 2 / 3; max-width: 100%; }
+.pages img { width: 100%; height: 100%; display: block; object-fit: contain; }
+.end { text-align: center; padding: 24px 16px 60px; color: var(--muted); font-family: var(--display); letter-spacing: .1em; }
+.end b { display: block; color: var(--salt); font-size: 22px; margin-bottom: 6px; letter-spacing: .04em; }
+.credit { font-size: 12px; color: #6f675e; margin-top: 18px; font-family: var(--body); letter-spacing: 0; }
+#counter { position: fixed; right: max(10px, env(safe-area-inset-right, 0px)); bottom: calc(env(safe-area-inset-bottom, 0px) + 10px); background: rgba(13,12,11,.85); border: 1px solid #3a322c; padding: 6px 10px; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+</style>
+
+<section class="cover">
+  <div class="in">
+    <div class="kick">Жнец · манга · арка III</div>
+    <h1>Соляной склеп</h1>
+    <p>Беглец из Гронека приносит весть: соляные копи проглотили двух солекопов и пятерых огненных братьев. Красные врата прорвутся на рассвете. Шин Нодзен идёт вниз.</p>
+    <a class="start" href="#p1">Читать</a>
+  </div>
+</section>
+<main class="pages" id="pages"></main>
+<div class="end"><b>Продолжение следует</b>Свод варницы рушится. Рассол поднимается.<div class="credit">Иллюстрации: открытая модель DreamShaper 8 (SD 1.5) + LCM, сгенерировано по сценарию кампании. Леттеринг — вручную кодом.</div></div>
+<div id="counter">1 / 16</div>
+
+<script>
+(() => {
+  const N = 16, box = document.getElementById('pages');
+  for (let i = 1; i <= N; i++) {
+    const f = document.createElement('figure'); f.id = 'p' + i;
+    const im = document.createElement('img'); im.loading = i <= 2 ? 'eager' : 'lazy'; im.decoding = 'async';
+    im.src = 'p' + String(i).padStart(2, '0') + '.jpg'; im.alt = 'Страница ' + i;
+    f.appendChild(im); box.appendChild(f);
+  }
+  const c = document.getElementById('counter');
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) c.textContent = e.target.id.slice(1) + ' / ' + N; }), { threshold: .5 });
+  box.querySelectorAll('figure').forEach(f => io.observe(f));
+  const go = () => { const t = location.hash && document.getElementById(location.hash.slice(1)); if (t) t.scrollIntoView(); };
+  window.addEventListener('hashchange', go); go();
+})();
+</script>
