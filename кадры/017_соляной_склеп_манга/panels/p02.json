@@ -1,0 +1,108 @@
+{
+  "page": 2,
+  "rows": [
+    {
+      "h": 1.3,
+      "panels": [
+        {
+          "id": "p02a",
+          "w": 1.0,
+          "seed": 201,
+          "prompt": "High wide shot, column of riders leaving marsh village west along raised dam through reeds and fog; leading young witcher man, short ash-grey hair, golden cat eyes, half-asian face, stubble, dark leather armor, two swords on back on chestnut mare with white blaze; knights behind",
+          "texts": [
+            {
+              "kind": "caption",
+              "who": "",
+              "text": "На Гронек.",
+              "pos": "tl"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "h": 1.2,
+      "panels": [
+        {
+          "id": "p02b",
+          "w": 1.0,
+          "seed": 202,
+          "prompt": "Medium shot, tall nordic woman, blonde braids, fur and chainmail, two-handed axe on horseback, axe resting on shoulder, wide wolfish grin; frosted road, thinning morning fog",
+          "texts": [
+            {
+              "kind": "speech",
+              "who": "Рагна",
+              "text": "Наконец-то! Рагна уж думала, мы тут корни пустим.",
+              "pos": "tr"
+            }
+          ]
+        },
+        {
+          "id": "p02c",
+          "w": 1.0,
+          "seed": 203,
+          "prompt": "Two-shot riding side by side: japanese teen boy, black hair, blue eyes, noble cloak, glowing golden sword, eager and excited; young chinese woman, long black braid, dark-blue outfit, glowing white bow, stern, eyes forward; frosted road, morning fog",
+          "texts": [
+            {
+              "kind": "speech",
+              "who": "Рэн",
+              "text": "Рейд… то есть поход. Поход!",
+              "pos": "tl"
+            },
+            {
+              "kind": "speech",
+              "who": "Ли Сюэ",
+              "text": "Спину ровно.",
+              "pos": "tr"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "h": 0.8,
+      "panels": [
+        {
+          "id": "p02d",
+          "w": 1.0,
+          "seed": 204,
+          "prompt": "Wide shot, woman with short light-brown hair, tired grey eyes, round shield with green runes on log tavern porch beside huge ash tree, hand on shoulder of pointy-eared girl, watching riders leave, guarded; grey mist",
+          "texts": []
+        }
+      ]
+    },
+    {
+      "h": 1.2,
+      "panels": [
+        {
+          "id": "p02e",
+          "w": 1.0,
+          "seed": 205,
+          "prompt": "Medium shot, lanky freckled boy in oversized felt hat running up to stirrup, holding up folded note to young witcher man, short ash-grey hair, golden cat eyes, half-asian face, stubble, dark leather armor, two swords on back on chestnut mare; roadside post, three old willows",
+          "texts": [
+            {
+              "kind": "speech",
+              "who": "Хорёк",
+              "text": "От Матиаса! Засаду у Жёлтого брода отбили!",
+              "pos": "tl"
+            }
+          ]
+        },
+        {
+          "id": "p02f",
+          "w": 1.0,
+          "seed": 206,
+          "prompt": "Close-up, gloved hand holding an unfolded paper note covered in smudged illegible scribbles, dark leather sleeve, chestnut horse mane behind; soft fog light",
+          "texts": [
+            {
+              "kind": "caption",
+              "who": "",
+              "text": "Гринь и Кузьма взяты живыми. Ярош цел.",
+              "pos": "bl"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,101 @@
+{
+  "page": 11,
+  "rows": [
+    {
+      "h": 1.3,
+      "panels": [
+        {
+          "id": "p11a",
+          "w": 1.0,
+          "seed": 1101,
+          "prompt": "Wide shot: flooded salt gallery, black brine, salt icicles; young witcher man, short ash-grey hair, golden cat eyes, half-asian face, stubble, dark leather armor, two swords on back wades mid-hall, torch high; three companions file along left wall, faint glowing air threads.",
+          "texts": [
+            {
+              "kind": "caption",
+              "who": "",
+              "text": "Ярус третий. Рассольный горизонт. ≈22:00.",
+              "pos": "tl"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "h": 1.2,
+      "panels": [
+        {
+          "id": "p11b",
+          "w": 0.5,
+          "seed": 1102,
+          "prompt": "Action shot: young witcher man, short ash-grey hair, golden cat eyes, half-asian face, stubble, dark leather armor, two swords on back waist-deep in black brine cuts down bloated pale drowned miner with long claws, brine exploding upward. Cold blue darkness.",
+          "texts": [
+            {
+              "kind": "sfx",
+              "who": "",
+              "text": "ПЛЕСК!",
+              "pos": "t"
+            }
+          ]
+        },
+        {
+          "id": "p11c",
+          "w": 0.5,
+          "seed": 1103,
+          "prompt": "Low angle: white light arrow shatters salt icicle cluster above young witcher man, short ash-grey hair, golden cat eyes, half-asian face, stubble, dark leather armor, two swords on back, shards raining beside him, black brine. Cold blue.",
+          "texts": [
+            {
+              "kind": "sfx",
+              "who": "",
+              "text": "ДЗЗАНЬ!",
+              "pos": "t"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "h": 0.8,
+      "panels": [
+        {
+          "id": "p11d",
+          "w": 1.0,
+          "seed": 1104,
+          "prompt": "Wide shot: volley of crystal salt needles shoots from cave wall into translucent golden shell around young witcher man, short ash-grey hair, golden cat eyes, half-asian face, stubble, dark leather armor, two swords on back; half the shell cracks into golden shards. Black brine.",
+          "texts": [
+            {
+              "kind": "sfx",
+              "who": "",
+              "text": "ТЦ-ТЦ-ТЦ!",
+              "pos": "tl"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "h": 1.7,
+      "panels": [
+        {
+          "id": "p11e",
+          "w": 1.0,
+          "seed": 1105,
+          "prompt": "Low angle: hulking bald convict giant wrapped in iron chains, waist-deep in black brine, rising, chains trailing into depths; young witcher man, short ash-grey hair, golden cat eyes, half-asian face, stubble, dark leather armor, two swords on back faces him, sword ready.",
+          "texts": [
+            {
+              "kind": "speech",
+              "who": "Рагна",
+              "text": "Рыбья требуха… это ещё кто?",
+              "pos": "tl"
+            },
+            {
+              "kind": "speech",
+              "who": "Рэн",
+              "text": "Мини-босс… то есть… ябай.",
+              "pos": "tr"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

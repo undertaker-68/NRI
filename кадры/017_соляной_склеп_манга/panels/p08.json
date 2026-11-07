@@ -1,0 +1,101 @@
+{
+  "page": 8,
+  "rows": [
+    {
+      "h": 1.1,
+      "panels": [
+        {
+          "id": "p08a",
+          "w": 1.0,
+          "seed": 801,
+          "prompt": "Wide shot, cavern chapel, rough altar of piled salt blocks with guttering candle stubs, four dead knights in flame-embroidered white cloaks lying side by side, crusted white; party entering from right; amber candlelight",
+          "texts": [
+            {
+              "kind": "caption",
+              "who": "",
+              "text": "Ярус второй. Часовня каторжан.",
+              "pos": "tl"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "h": 1.3,
+      "panels": [
+        {
+          "id": "p08b",
+          "w": 1.0,
+          "seed": 802,
+          "prompt": "Dynamic shot, gaunt knight, milky salt-crusted eyes, white-crimson surcoat with flame emblem, bronze censer charging out of darkness, swinging censer on chain in wide smoky arc at japanese teen boy, black hair, blue eyes, noble cloak, glowing golden sword; amber candlelight, salt white",
+          "texts": [
+            {
+              "kind": "shout",
+              "who": "Гервазий",
+              "text": "Демоны!",
+              "pos": "tl"
+            },
+            {
+              "kind": "sfx",
+              "who": "",
+              "text": "ДЗЕНЬ",
+              "pos": "b"
+            }
+          ]
+        },
+        {
+          "id": "p08c",
+          "w": 1.0,
+          "seed": 803,
+          "prompt": "Extreme close-up, gaunt face with milky salt-crusted eyes, scar through eyebrow, white salt veins under grey skin, teeth bared in holy terror; amber candlelight",
+          "texts": [
+            {
+              "kind": "shout",
+              "who": "Гервазий",
+              "text": "Жнец пришёл за душами!",
+              "pos": "tr"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "h": 1.2,
+      "panels": [
+        {
+          "id": "p08d",
+          "w": 1.0,
+          "seed": 804,
+          "prompt": "Close-up, japanese teen boy, black hair, blue eyes, noble cloak, glowing golden sword pulling cloak over his glowing sword, light leaking through fabric, hurt face, lips pressed, eyes down; dim salt cavern",
+          "texts": []
+        },
+        {
+          "id": "p08e",
+          "w": 1.0,
+          "seed": 805,
+          "prompt": "Medium shot, young witcher man, short ash-grey hair, golden cat eyes, half-asian face, stubble, dark leather armor, two swords on back raising hand in hypnotic sign, faint pale ripple toward eyes of salt-crusted knight held by blonde axe-woman and balding knight-monk; candlelight",
+          "texts": []
+        }
+      ]
+    },
+    {
+      "h": 1.2,
+      "panels": [
+        {
+          "id": "p08f",
+          "w": 1.0,
+          "seed": 806,
+          "prompt": "Medium shot, gaunt knight, milky salt-crusted eyes, white-crimson surcoat with flame emblem, bronze censer slumped on knees, docile; balding broad knight-monk, grey surcoat over plate, kite shield gently pouring water from leather flask over his face; amber candlelight, salt altar",
+          "texts": [
+            {
+              "kind": "whisper",
+              "who": "Гервазий",
+              "text": "Жнец… бери меня последним.",
+              "pos": "tr"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

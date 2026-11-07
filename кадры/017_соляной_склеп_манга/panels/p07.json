@@ -1,0 +1,101 @@
+{
+  "page": 7,
+  "rows": [
+    {
+      "h": 1.2,
+      "panels": [
+        {
+          "id": "p07a",
+          "w": 1.0,
+          "seed": 701,
+          "prompt": "Wide shot, frost-white salt mine gallery with rusted rails receding into darkness, column of shackled salt-crusted dead convicts in rags shuffling forward, chains dragging; orange torchlight, cold blue shadows",
+          "texts": [
+            {
+              "kind": "caption",
+              "who": "",
+              "text": "Ярус первый. Штольня каторжан.",
+              "pos": "tl"
+            },
+            {
+              "kind": "sfx",
+              "who": "",
+              "text": "ДЗЫНЬ… ДЗЫНЬ…",
+              "pos": "b"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "h": 1.4,
+      "panels": [
+        {
+          "id": "p07b",
+          "w": 1.0,
+          "seed": 702,
+          "prompt": "Dynamic action shot, young witcher man, short ash-grey hair, golden cat eyes, half-asian face, stubble, dark leather armor, two swords on back cleaving shackled salt convict bursting into glittering salt shards; left axe-woman hewing; right glowing sword arc; white gallery, torchlight",
+          "texts": [
+            {
+              "kind": "sfx",
+              "who": "",
+              "text": "ХРУСТЬ!",
+              "pos": "t"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "h": 1.2,
+      "panels": [
+        {
+          "id": "p07c",
+          "w": 1.0,
+          "seed": 703,
+          "prompt": "Medium shot, young chinese woman, long black braid, dark-blue outfit, glowing white bow pointing at flame symbol with arrow pointing left scratched on white salt wall at tunnel fork; torchlight, cold blue shadows",
+          "texts": [
+            {
+              "kind": "speech",
+              "who": "Ли Сюэ",
+              "text": "Стрелка — влево.",
+              "pos": "tl"
+            }
+          ]
+        },
+        {
+          "id": "p07d",
+          "w": 1.0,
+          "seed": 704,
+          "prompt": "Close-up, torch in gloved hand, flame leaning clearly right, thin smoke ribbon streaming right; blonde braid and fur shoulder at edge; white salt wall, cold blue shadows",
+          "texts": [
+            {
+              "kind": "speech",
+              "who": "Рагна",
+              "text": "А огонь — вправо. Кому верим, Жнец?",
+              "pos": "tl"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "h": 1.1,
+      "panels": [
+        {
+          "id": "p07e",
+          "w": 1.0,
+          "seed": 705,
+          "prompt": "Wide shot from behind, young witcher man, short ash-grey hair, golden cat eyes, half-asian face, stubble, dark leather armor, two swords on back leading party into right-hand tunnel, torch flame leaning right; left tunnel fading into darkness; white salt walls, orange torchlight",
+          "texts": [
+            {
+              "kind": "caption",
+              "who": "",
+              "text": "Шли по тяге факела. Стрелка Ордена лгала.",
+              "pos": "tl"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

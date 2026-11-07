@@ -1,0 +1,109 @@
+{
+  "page": 5,
+  "rows": [
+    {
+      "h": 1.2,
+      "panels": [
+        {
+          "id": "p05a",
+          "w": 1.0,
+          "seed": 501,
+          "prompt": "Establishing wide shot, grey salt-mining town on hillside at dusk, steep roofs dusted with salt, stone chapel with bronze flame on spire; mounted party riding up muddy street; drizzle, slate twilight",
+          "texts": [
+            {
+              "kind": "caption",
+              "who": "",
+              "text": "Гронек. ≈17:00.",
+              "pos": "tl"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "h": 1.2,
+      "panels": [
+        {
+          "id": "p05b",
+          "w": 1.0,
+          "seed": 502,
+          "prompt": "Low-angle medium shot, gaunt old prior, cropped white hair, grey-crimson robe with flame emblem, brass lantern, looking up with cold suspicion; muddy street, dusk drizzle, warm lantern glow",
+          "texts": [
+            {
+              "kind": "speech",
+              "who": "Кассиан",
+              "text": "Герой Меча — спаситель. А ты… тот, перед кем падают на колени?",
+              "pos": "tr"
+            }
+          ]
+        },
+        {
+          "id": "p05c",
+          "w": 1.0,
+          "seed": 503,
+          "prompt": "Medium shot, fat sweaty burgomaster in fur-trimmed coat and chain of office, wringing coin purse; behind him tall nordic woman, blonde braids, fur and chainmail, two-handed axe, smirking; dusk street",
+          "texts": [
+            {
+              "kind": "speech",
+              "who": "Пфенниг",
+              "text": "Четыреста крон! …Ладно, шестьсот — если до рассвета!",
+              "pos": "tl"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "h": 1.6,
+      "panels": [
+        {
+          "id": "p05d",
+          "w": 1.0,
+          "seed": 504,
+          "prompt": "Close-up, young witcher man, short ash-grey hair, golden cat eyes, half-asian face, stubble, dark leather armor, two swords on back behind a floating thin cold grey semi-transparent rectangular interface panel with hairline frame, blank; unreadable expression; dusk, cold blue glow",
+          "texts": [
+            {
+              "kind": "system",
+              "who": "",
+              "text": "[ Срочное задание: Красные врата Гронека ]\n[ Условие: убить хозяина врат · Срок: до 14 листопада 06:00 ]\n[ Скрытая цель: ??? ]\n[ Награда: 250 XP · 1 очко навыков · эхо хозяина ]",
+              "pos": "c"
+            }
+          ]
+        },
+        {
+          "id": "p05e",
+          "w": 1.0,
+          "seed": 505,
+          "prompt": "Close-up, gaunt old prior, cropped white hair, grey-crimson robe with flame emblem, brass lantern, face lit from below by lantern, low hard stare; dark dusk background",
+          "texts": [
+            {
+              "kind": "speech",
+              "who": "Кассиан",
+              "text": "Живых вынеси. Мёртвым не дай встать.",
+              "pos": "tl"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "h": 0.8,
+      "panels": [
+        {
+          "id": "p05f",
+          "w": 1.0,
+          "seed": 506,
+          "prompt": "Medium shot, balding broad knight-monk, grey surcoat over plate, kite shield cinching two leather water flasks onto his belt, earnest kind face; dusk street, drizzle",
+          "texts": [
+            {
+              "kind": "speech",
+              "who": "Йон",
+              "text": "Пресная. Для раненых.",
+              "pos": "tr"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

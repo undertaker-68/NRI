@@ -1,0 +1,95 @@
+{
+  "page": 12,
+  "rows": [
+    {
+      "h": 1.4,
+      "panels": [
+        {
+          "id": "p12a",
+          "w": 0.5,
+          "seed": 1201,
+          "prompt": "Action shot: young witcher man, short ash-grey hair, golden cat eyes, half-asian face, stubble, dark leather armor, two swords on back hurls small clay bomb; blinding white flash bursts at face of hulking bald convict giant wrapped in iron chains, waist-deep in black brine, reeling.",
+          "texts": [
+            {
+              "kind": "sfx",
+              "who": "",
+              "text": "БУХ!",
+              "pos": "tr"
+            },
+            {
+              "kind": "caption",
+              "who": "",
+              "text": "Самум.",
+              "pos": "tl"
+            }
+          ]
+        },
+        {
+          "id": "p12b",
+          "w": 0.5,
+          "seed": 1202,
+          "prompt": "Close shot: young witcher man, short ash-grey hair, golden cat eyes, half-asian face, stubble, dark leather armor, two swords on back right against hulking bald convict giant wrapped in iron chains, waist-deep in black brine, raising hand in hypnotic sign, pale ripple toward giant's eyes.",
+          "texts": []
+        }
+      ]
+    },
+    {
+      "h": 1.6,
+      "panels": [
+        {
+          "id": "p12c",
+          "w": 1.0,
+          "seed": 1203,
+          "prompt": "Vision: rows of convicts on one chain hacking salt walls by lamplight; tall faceless overseer silhouette looms above, hand raised counting. Faded sepia and dusty blue, dry-brush, torn rough edges.",
+          "texts": [
+            {
+              "kind": "whisper",
+              "who": "призрачный голос",
+              "text": "…двести тринадцать…",
+              "pos": "t"
+            },
+            {
+              "kind": "caption",
+              "who": "",
+              "text": "Аксий не взял. Только смена — и счёт.",
+              "pos": "bl"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "h": 1.5,
+      "panels": [
+        {
+          "id": "p12d",
+          "w": 0.5,
+          "seed": 1204,
+          "prompt": "Impact shot: huge fist of hulking bald convict giant wrapped in iron chains, waist-deep in black brine, slamming point-blank into young witcher man, short ash-grey hair, golden cat eyes, half-asian face, stubble, dark leather armor, two swords on back; golden translucent shell explodes into shards.",
+          "texts": [
+            {
+              "kind": "sfx",
+              "who": "",
+              "text": "КРАК!",
+              "pos": "tr"
+            }
+          ]
+        },
+        {
+          "id": "p12e",
+          "w": 0.5,
+          "seed": 1205,
+          "prompt": "Action: japanese teen boy, black hair, blue eyes, noble cloak, glowing golden sword and tall nordic woman, blonde braids, fur and chainmail, two-handed axe hit chained giant's side, blood spraying; black-braided archer with glowing white bow points at iron ring on salt pillar.",
+          "texts": [
+            {
+              "kind": "shout",
+              "who": "Ли Сюэ",
+              "text": "Цепь! К кольцу на столбе — у него за спиной!",
+              "pos": "tl"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

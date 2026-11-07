@@ -1,0 +1,62 @@
+{
+  "page": 14,
+  "rows": [
+    {
+      "h": 4.0,
+      "panels": [
+        {
+          "id": "p14a",
+          "w": 1.0,
+          "seed": 1401,
+          "prompt": "Low-angle splash: giant figure crusted in white salt crystal, glowing blue eyes, chain whip, huge pick-hammer, on dais in vaulted salt hall; foreground silhouettes: young witcher man, short ash-grey hair, golden cat eyes, half-asian face, stubble, dark leather armor, two swords on back, three companions.",
+          "texts": [
+            {
+              "kind": "caption",
+              "who": "",
+              "text": "Ярус четвёртый. Варница. ≈22:40.",
+              "pos": "tl"
+            },
+            {
+              "kind": "shout",
+              "who": "Солевар",
+              "text": "Смена не кончилась. Никто не уходит.",
+              "pos": "t"
+            },
+            {
+              "kind": "shout",
+              "who": "Солевар",
+              "text": "Кто вы такие, чтобы уходить?",
+              "pos": "tr"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "h": 1.2,
+      "panels": [
+        {
+          "id": "p14b",
+          "w": 0.5,
+          "seed": 1402,
+          "prompt": "Inset close-up: far salt column, bronze censer on chain hanging from iron hook, swaying slightly. Cold blue gloom, drifting salt dust.",
+          "texts": []
+        },
+        {
+          "id": "p14c",
+          "w": 0.5,
+          "seed": 1403,
+          "prompt": "Close-up: young witcher man, short ash-grey hair, golden cat eyes, half-asian face, stubble, dark leather armor, two swords on back throws back third potion vial, two empty vials falling, dark veins creeping up neck to temples. Torch orange.",
+          "texts": [
+            {
+              "kind": "system",
+              "who": "",
+              "text": "Удары: 0/500 · До полуночи: 1 ч 20 мин",
+              "pos": "tr"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

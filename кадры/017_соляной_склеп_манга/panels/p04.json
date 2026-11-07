@@ -1,0 +1,101 @@
+{
+  "page": 4,
+  "rows": [
+    {
+      "h": 1.2,
+      "panels": [
+        {
+          "id": "p04a",
+          "w": 1.0,
+          "seed": 401,
+          "prompt": "Wide shot, drizzle over muddy rutted road between bare fields, straggling refugees with carts and bundles, white salt dust on shoulders and hair, approaching mounted column; slate-grey sky",
+          "texts": [
+            {
+              "kind": "caption",
+              "who": "",
+              "text": "13 листопада. Западный тракт.",
+              "pos": "tl"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "h": 1.3,
+      "panels": [
+        {
+          "id": "p04b",
+          "w": 1.0,
+          "seed": 402,
+          "prompt": "Medium shot, elderly refugee woman clutching bundle, salt dust on her shawl, wide frightened eyes, at stirrup of young chinese woman, long black braid, dark-blue outfit, glowing white bow on horseback; drizzle, muddy road",
+          "texts": [
+            {
+              "kind": "speech",
+              "who": "Беженка",
+              "text": "Иней ползёт из штольни… белый, как мука. А пение внизу стихло.",
+              "pos": "tl"
+            }
+          ]
+        },
+        {
+          "id": "p04c",
+          "w": 1.0,
+          "seed": 403,
+          "prompt": "Medium wide shot, lone rider in grey cloak with grey feather in hat band raising stick with white rag on low rise; foreground archer half-drawing glowing bow, blonde axe-woman tense; drizzle",
+          "texts": [
+            {
+              "kind": "caption",
+              "who": "",
+              "text": "≈14:00.",
+              "pos": "tl"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "h": 1.1,
+      "panels": [
+        {
+          "id": "p04d",
+          "w": 1.0,
+          "seed": 404,
+          "prompt": "Medium close-up, lean nondescript rider in grey hooded cloak, grey feather in hat band, empty hands raised and visible, careful smile; white rag on stick; drizzle, slate-grey sky",
+          "texts": [
+            {
+              "kind": "speech",
+              "who": "Разведчик Серого",
+              "text": "Петух хочет говорить, не драться.",
+              "pos": "tl"
+            },
+            {
+              "kind": "speech",
+              "who": "Разведчик Серого",
+              "text": "Серый будет в Гати — четырнадцатого, пятнадцатого. Назовёт цену за книгу.",
+              "pos": "tr"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "h": 1.2,
+      "panels": [
+        {
+          "id": "p04e",
+          "w": 1.0,
+          "seed": 405,
+          "prompt": "Wide shot, thin pale young monk-knight, grey habit with orange flame embroidery, with four halberd guards blocking muddy road; japanese teen boy, black hair, blue eyes, noble cloak, glowing golden sword on horseback glancing sideways, uncomfortable; drizzle",
+          "texts": [
+            {
+              "kind": "speech",
+              "who": "Лукаш",
+              "text": "Герой Меча! Приор ждёт тебя у врат!",
+              "pos": "tl"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

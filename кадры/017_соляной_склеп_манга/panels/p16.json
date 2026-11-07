@@ -1,0 +1,127 @@
+{
+  "page": 16,
+  "rows": [
+    {
+      "h": 1.2,
+      "panels": [
+        {
+          "id": "p16a",
+          "w": 0.5,
+          "seed": 1601,
+          "prompt": "Medium shot: new plates of salt crust grow over giant figure crusted in white salt crystal, glowing blue eyes, chain whip, huge pick-hammer, like armor; salt boulders fall from cracking salt vault. Bone-white, cold blue.",
+          "texts": [
+            {
+              "kind": "sfx",
+              "who": "",
+              "text": "ГРРРК…",
+              "pos": "b"
+            },
+            {
+              "kind": "caption",
+              "who": "",
+              "text": "Корка нарастает. Свод сыплется.",
+              "pos": "tl"
+            }
+          ]
+        },
+        {
+          "id": "p16b",
+          "w": 0.5,
+          "seed": 1602,
+          "prompt": "Medium shot: air and dust streams sucked into salt giant's chest, crust opening in glowing cracks; young chinese woman, long black braid, dark-blue outfit, glowing white bow silently raises open hand as signal. Cold blue.",
+          "texts": [
+            {
+              "kind": "caption",
+              "who": "",
+              "text": "Вдох.",
+              "pos": "tl"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "h": 1.3,
+      "panels": [
+        {
+          "id": "p16c",
+          "w": 1.0,
+          "seed": 1603,
+          "prompt": "Wide action: young witcher man, short ash-grey hair, golden cat eyes, half-asian face, stubble, dark leather armor, two swords on back and three companions strike salt giant's opened chest at once: glowing sword, axe, white light arrow, steel; giant crashes to knees, floor cracking.",
+          "texts": [
+            {
+              "kind": "sfx",
+              "who": "",
+              "text": "ГРОХ!!",
+              "pos": "b"
+            },
+            {
+              "kind": "speech",
+              "who": "Рэн",
+              "text": "Ябай… он на коленях!",
+              "pos": "tl"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "h": 1.1,
+      "panels": [
+        {
+          "id": "p16d",
+          "w": 0.5,
+          "seed": 1604,
+          "prompt": "Extreme close-up: steel sword shears three fingers off salt-crusted giant hand gripping chain whip; shackle-link whip flies into darkness, salt chips. Cold blue.",
+          "texts": [
+            {
+              "kind": "sfx",
+              "who": "",
+              "text": "ХРЯСЬ!",
+              "pos": "tr"
+            }
+          ]
+        },
+        {
+          "id": "p16e",
+          "w": 0.5,
+          "seed": 1605,
+          "prompt": "Medium shot: salt crust sloughs off giant in great sheets, revealing raw grey salt-cured dead flesh; jets of brine burst through cracked walls. Bone-white, cold blue.",
+          "texts": [
+            {
+              "kind": "sfx",
+              "who": "",
+              "text": "ШШШУХ!",
+              "pos": "b"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "h": 1.8,
+      "panels": [
+        {
+          "id": "p16f",
+          "w": 1.0,
+          "seed": 1606,
+          "prompt": "Wide shot: crustless gaunt grey giant kneels roaring; dark brine knee-deep, rising; salt vault splitting, boulders falling; young witcher man, short ash-grey hair, golden cat eyes, half-asian face, stubble, dark leather armor, two swords on back centre, sword ready, three companions beside him.",
+          "texts": [
+            {
+              "kind": "caption",
+              "who": "",
+              "text": "До обрушения — считанные вдохи.",
+              "pos": "tl"
+            },
+            {
+              "kind": "caption",
+              "who": "",
+              "text": "Продолжение следует…",
+              "pos": "br"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

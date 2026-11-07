@@ -1,0 +1,115 @@
+{
+  "page": 3,
+  "rows": [
+    {
+      "h": 1.2,
+      "panels": [
+        {
+          "id": "p03a",
+          "w": 1.6,
+          "seed": 301,
+          "prompt": "Wide shot, dismounted party of armed travellers, wary, at abandoned campsite in bare winter forest past shallow ford with leafless apple trees; cold fire pit, trampled snow; grey birches, hoarfrost",
+          "texts": [
+            {
+              "kind": "caption",
+              "who": "",
+              "text": "За Яблоневым бродом.",
+              "pos": "tl"
+            }
+          ]
+        },
+        {
+          "id": "p03b",
+          "w": 1.0,
+          "seed": 302,
+          "prompt": "Extreme close-up, gloved fingers lifting a grey feather from snow, small rooster mark burned into its quill; blonde braid and fur shoulder at right edge",
+          "texts": [
+            {
+              "kind": "speech",
+              "who": "Рагна",
+              "text": "Петушиное. Люди Серого.",
+              "pos": "tr"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "h": 1.1,
+      "panels": [
+        {
+          "id": "p03c",
+          "w": 1.0,
+          "seed": 303,
+          "prompt": "Medium shot, young chinese woman, long black braid, dark-blue outfit, glowing white bow crouching at cold fire pit, palm held over the ash, eyes narrowed toward dark thicket; grey birches, moss, hoarfrost",
+          "texts": [
+            {
+              "kind": "speech",
+              "who": "Ли Сюэ",
+              "text": "Ушли недавно. Следят за нами.",
+              "pos": "tr"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "h": 0.8,
+      "panels": [
+        {
+          "id": "p03d",
+          "w": 1.0,
+          "seed": 304,
+          "prompt": "Wide night shot, abandoned log hut with sagging roof in dark pine forest, orange firelight leaking through cracks between logs, horses tethered outside, breath steaming; deep cold blue",
+          "texts": [
+            {
+              "kind": "caption",
+              "who": "",
+              "text": "Ночь в брошенном срубе.",
+              "pos": "tl"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "h": 1.4,
+      "panels": [
+        {
+          "id": "p03e",
+          "w": 1.0,
+          "seed": 305,
+          "prompt": "Medium shot inside log hut, japanese teen boy, black hair, blue eyes, noble cloak, glowing golden sword sitting hugging his knees, sword across knees, looking up with fragile searching face; small hearth fire, warm orange light",
+          "texts": [
+            {
+              "kind": "speech",
+              "who": "Рэн",
+              "text": "Шин-сан… переход. Как это было у тебя? Может, это всё-таки… игра?",
+              "pos": "tl"
+            },
+            {
+              "kind": "sfx",
+              "who": "",
+              "text": "трк",
+              "pos": "bl"
+            }
+          ]
+        },
+        {
+          "id": "p03f",
+          "w": 1.0,
+          "seed": 306,
+          "prompt": "Close-up, young witcher man, short ash-grey hair, golden cat eyes, half-asian face, stubble, dark leather armor, two swords on back, firelight on half his face, other half in deep shadow, looking straight ahead, quiet and certain; warm orange glow",
+          "texts": [
+            {
+              "kind": "speech",
+              "who": "Шин",
+              "text": "Это не игра.",
+              "pos": "tr"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

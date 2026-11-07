@@ -1,0 +1,109 @@
+{
+  "page": 1,
+  "rows": [
+    {
+      "h": 0.9,
+      "panels": [
+        {
+          "id": "p01a",
+          "w": 1.0,
+          "seed": 101,
+          "prompt": "Wide shot, young witcher man, short ash-grey hair, golden cat eyes, half-asian face, stubble, dark leather armor, two swords on back, running alone along an earthen dam across a misty marsh at dawn, breath steaming; cold blue-grey fog, wet dark wood",
+          "texts": [
+            {
+              "kind": "caption",
+              "who": "",
+              "text": "Серая Гать. 12 листопада, утро.",
+              "pos": "tl"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "h": 1.3,
+      "panels": [
+        {
+          "id": "p01b",
+          "w": 1.0,
+          "seed": 102,
+          "prompt": "Medium shot, exhausted salt miner in sheepskin vest collapsing to his knees in snow under huge ash tree by log tavern door; young witcher man, short ash-grey hair, golden cat eyes, half-asian face, stubble, dark leather armor, two swords on back approaching; dawn mist",
+          "texts": [
+            {
+              "kind": "speech",
+              "who": "Збышек",
+              "text": "Ведьмак… Жнец? Я из Гронека… бежал…",
+              "pos": "tl"
+            }
+          ]
+        },
+        {
+          "id": "p01c",
+          "w": 1.0,
+          "seed": 103,
+          "prompt": "Close-up, gaunt salt miner's face caked in grey salt dust, hollow cheeks, cracked lips, red-rimmed terrified eyes, salt-dusted stubble; cold blue-grey morning mist",
+          "texts": [
+            {
+              "kind": "speech",
+              "who": "Збышек",
+              "text": "В копях красные врата. Двоих наших проглотило. И пятерых огненных братьев.",
+              "pos": "tr"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "h": 1.3,
+      "panels": [
+        {
+          "id": "p01d",
+          "w": 1.4,
+          "seed": 104,
+          "prompt": "Extreme close-up, raw cracked bleeding fingers clutching the studded dark leather sleeve of a witcher jacket; snow, cold grey light",
+          "texts": [
+            {
+              "kind": "speech",
+              "who": "Збышек",
+              "text": "Бургомистр даёт четыреста крон. На рассвете четырнадцатого — прорвёт.",
+              "pos": "tl"
+            }
+          ]
+        },
+        {
+          "id": "p01e",
+          "w": 0.8,
+          "seed": 105,
+          "prompt": "Tight close-up, young witcher man, short ash-grey hair, golden cat eyes, half-asian face, stubble, dark leather armor, two swords on back, vertical slit pupils, ash-grey strands over forehead, one short decisive nod; cold dawn light",
+          "texts": [
+            {
+              "kind": "caption",
+              "who": "",
+              "text": "Заказ взят.",
+              "pos": "bl"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "h": 1.5,
+      "panels": [
+        {
+          "id": "p01f",
+          "w": 1.0,
+          "seed": 106,
+          "prompt": "Wide shot, woman with short light-brown hair, tired grey eyes, round shield with green runes kneeling, binding salt miner's hands with linen strips on bench by log tavern door; half-elf girl with pointed ears peeking from half-open door; morning mist",
+          "texts": [
+            {
+              "kind": "speech",
+              "who": "Мира",
+              "text": "Сиди. Стабилен. В смысле — стабильно плох.",
+              "pos": "tr"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

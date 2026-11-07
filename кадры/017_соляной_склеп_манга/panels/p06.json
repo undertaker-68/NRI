@@ -1,0 +1,69 @@
+{
+  "page": 6,
+  "rows": [
+    {
+      "h": 4.0,
+      "panels": [
+        {
+          "id": "p06a",
+          "w": 1.0,
+          "seed": 601,
+          "prompt": "Low-angle back view, five figures facing mine portal filled with pulsing crimson membrane; center young witcher man, short ash-grey hair, golden cat eyes, half-asian face, stubble, dark leather armor, two swords on back, red rim light; glowing-sword boy, archer, axe-woman, shield-monk; torch knights; salt frost",
+          "texts": [
+            {
+              "kind": "caption",
+              "who": "",
+              "text": "Соляной склеп. Красные врата.",
+              "pos": "tl"
+            },
+            {
+              "kind": "whisper",
+              "who": "Рагна",
+              "text": "Соль мне в бороду…",
+              "pos": "bl"
+            },
+            {
+              "kind": "speech",
+              "who": "Рэн",
+              "text": "Красные. Обратно — только через босса.",
+              "pos": "br"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "h": 1.0,
+      "panels": [
+        {
+          "id": "p06b",
+          "w": 1.0,
+          "seed": 602,
+          "prompt": "Extreme close-up, heel of armored boot sinking into crimson membrane, concentric ripples racing across glowing red surface",
+          "texts": [
+            {
+              "kind": "sfx",
+              "who": "",
+              "text": "ХЛЮП",
+              "pos": "tr"
+            }
+          ]
+        },
+        {
+          "id": "p06c",
+          "w": 1.0,
+          "seed": 603,
+          "prompt": "Medium shot, gangly pale squire holding torch before smooth dark-red membrane in timber mine portal, knights with torches behind; salt frost on mud, drizzle",
+          "texts": [
+            {
+              "kind": "caption",
+              "who": "",
+              "text": "Плёнка сомкнулась за последним.",
+              "pos": "tl"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

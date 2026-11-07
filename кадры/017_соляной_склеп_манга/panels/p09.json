@@ -1,0 +1,76 @@
+{
+  "page": 9,
+  "rows": [
+    {
+      "h": 1.6,
+      "panels": [
+        {
+          "id": "p09a",
+          "w": 0.55,
+          "seed": 901,
+          "prompt": "Tall shot: four blind dead miners, salt-white skin, crusted white eyes, lurch from side tunnels, heads cocked, rusty picks raised; violet glyph circle flares on salt floor beneath them. Cold blue darkness.",
+          "texts": [
+            {
+              "kind": "sfx",
+              "who": "",
+              "text": "ВЗЗЗ",
+              "pos": "b"
+            }
+          ]
+        },
+        {
+          "id": "p09b",
+          "w": 0.45,
+          "seed": 902,
+          "prompt": "Action shot: young witcher man, short ash-grey hair, golden cat eyes, half-asian face, stubble, dark leather armor, two swords on back and japanese teen boy, black hair, blue eyes, noble cloak, glowing golden sword cutting down miners collapsing in violet glyph circle, salt shards flying.",
+          "texts": [
+            {
+              "kind": "sfx",
+              "who": "",
+              "text": "ВЖУХ!",
+              "pos": "t"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "h": 1.6,
+      "panels": [
+        {
+          "id": "p09c",
+          "w": 1.0,
+          "seed": 903,
+          "prompt": "Wide shot: young witcher man, short ash-grey hair, golden cat eyes, half-asian face, stubble, dark leather armor, two swords on back kneels, open palm pouring orange fire cone over four dead salt-crusted knights in white cloaks, funeral pyre; behind, balding knight-monk holds slumped gaunt knight.",
+          "texts": []
+        }
+      ]
+    },
+    {
+      "h": 1.3,
+      "panels": [
+        {
+          "id": "p09d",
+          "w": 0.35,
+          "seed": 904,
+          "prompt": "Extreme close-up: golden cat eyes with vertical slit pupils reflecting orange funeral fire, ash-grey hair strands, half-asian face, stubble. Darkness.",
+          "texts": []
+        },
+        {
+          "id": "p09e",
+          "w": 0.65,
+          "seed": 905,
+          "prompt": "Medium shot: young chinese woman, long black braid, dark-blue outfit, glowing white bow sits on salt block writing with pencil stub in small notebook, illegible scribbles, soft white bow-light. Dark salt chapel, candle stubs.",
+          "texts": [
+            {
+              "kind": "caption",
+              "who": "",
+              "text": "Ли Сюэ записала имена.",
+              "pos": "tl"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,108 @@
+{
+  "page": 13,
+  "rows": [
+    {
+      "h": 1.4,
+      "panels": [
+        {
+          "id": "p13a",
+          "w": 0.5,
+          "seed": 1301,
+          "prompt": "Tall shot: young witcher man, short ash-grey hair, golden cat eyes, half-asian face, stubble, dark leather armor, two swords on back brings steel sword down on chain fastened to iron ring on salt pillar, burst of orange sparks, chained giant's back nearby.",
+          "texts": [
+            {
+              "kind": "sfx",
+              "who": "",
+              "text": "ДЗАНГ!",
+              "pos": "tr"
+            }
+          ]
+        },
+        {
+          "id": "p13b",
+          "w": 0.5,
+          "seed": 1302,
+          "prompt": "Medium shot: severed chain sags into black brine; torch flame by wall stands straight; japanese teen boy, black hair, blue eyes, noble cloak, glowing golden sword and tall nordic woman, blonde braids, fur and chainmail, two-handed axe cut into staggering chained giant.",
+          "texts": []
+        }
+      ]
+    },
+    {
+      "h": 1.3,
+      "panels": [
+        {
+          "id": "p13c",
+          "w": 1.0,
+          "seed": 1303,
+          "prompt": "Wide shot: chained bald giant rips down low salt vault, slabs crashing into brine; young witcher man, short ash-grey hair, golden cat eyes, half-asian face, stubble, dark leather armor, two swords on back twists aside; chunk clips shoulder of blonde-braided axe woman, grinning.",
+          "texts": [
+            {
+              "kind": "sfx",
+              "who": "",
+              "text": "ГРОХ!",
+              "pos": "t"
+            },
+            {
+              "kind": "speech",
+              "who": "Рагна",
+              "text": "Пустяк! Рагну таким не свалишь.",
+              "pos": "tr"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "h": 1.3,
+      "panels": [
+        {
+          "id": "p13d",
+          "w": 0.5,
+          "seed": 1304,
+          "prompt": "Medium shot: hulking bald convict giant wrapped in iron chains, waist-deep in black brine, kneeling, holding broken chain end in both huge hands, staring at it bewildered, almost childlike. Cold blue gloom.",
+          "texts": [
+            {
+              "kind": "speech",
+              "who": "Антип",
+              "text": "Кто… порвал цепь?",
+              "pos": "tl"
+            }
+          ]
+        },
+        {
+          "id": "p13e",
+          "w": 0.5,
+          "seed": 1305,
+          "prompt": "Silhouette action: young witcher man, short ash-grey hair, golden cat eyes, half-asian face, stubble, dark leather armor, two swords on back, horizontal sword stroke, flash of steel, spray of brine and salt, giant's head leaving frame, stylized, not graphic.",
+          "texts": [
+            {
+              "kind": "sfx",
+              "who": "",
+              "text": "ВЖИК.",
+              "pos": "tr"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "h": 0.8,
+      "panels": [
+        {
+          "id": "p13f",
+          "w": 1.0,
+          "seed": 1306,
+          "prompt": "Close-up: gloved open palm holding old iron shackle key and dully glowing power stone; behind, dark passage leading down, pale salt dust drifting out. Cold blue, dim glow.",
+          "texts": [
+            {
+              "kind": "caption",
+              "who": "",
+              "text": "Кандальный ключ. Камень силы. Дальше — варница.",
+              "pos": "tl"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
